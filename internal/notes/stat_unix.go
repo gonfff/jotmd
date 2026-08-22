@@ -23,5 +23,15 @@ func lstatChild(dirFD int, name string) (entryInfo, error) {
 		return entryInfo{}, err
 	}
 	mode := stat.Mode & unix.S_IFMT
-	return entryInfo{directory: mode == unix.S_IFDIR, regular: mode == unix.S_IFREG, symlink: mode == unix.S_IFLNK, size: stat.Size, modified: time.Unix(stat.Mtim.Sec, stat.Mtim.Nsec), identity: FileIdentity{Device: uint64(stat.Dev), Inode: stat.Ino}}, nil
+	return entryInfo{directory: mode == unix.S_IFDIR, regular: mode == unix.S_IFREG, symlink: mode == unix.S_IFLNK, size: stat.Size, modified: time.Unix(stat.Mtim.Sec, stat.Mtim.Nsec), identity: identityFromStat(&stat)}, nil
+}
+
+func identityFromStat(stat *unix.Stat_t) FileIdentity {
+	seconds, nanoseconds := statVersion(stat)
+	return FileIdentity{
+		Device:             uint64(stat.Dev),
+		Inode:              stat.Ino,
+		versionSeconds:     seconds,
+		versionNanoseconds: nanoseconds,
+	}
 }

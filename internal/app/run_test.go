@@ -203,6 +203,7 @@ func TestRunDumpConfigAppliesNotesDirFlag(t *testing.T) {
 func TestRunInitConfigCreatesTemplatesBeforeStartingTUI(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", "")
 	var stdout, stderr bytes.Buffer
 	gotCode := Run(context.Background(), []string{"--init-config"}, strings.NewReader(""), &stdout, &stderr)
 	if gotCode != 0 {

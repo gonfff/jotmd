@@ -10,7 +10,18 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"golang.org/x/sys/unix"
 )
+
+func TestFileIdentityDistinguishesRecreatedEntryWhenInodeIsReused(t *testing.T) {
+	original := unix.Stat_t{Dev: 1, Ino: 2, Btim: unix.Timespec{Sec: 3, Nsec: 4}}
+	replacement := original
+	replacement.Btim.Nsec++
+	if identityFromStat(&replacement) == identityFromStat(&original) {
+		t.Fatal("recreated entry identity matches original after simulated inode reuse")
+	}
+}
 
 func TestFinderTrashCommandPassesPathAsOpaqueArgument(t *testing.T) {
 	path := `/tmp/note " & do shell script "touch /tmp/pwned" & ".md`
