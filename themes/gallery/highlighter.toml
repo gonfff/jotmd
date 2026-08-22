@@ -1,0 +1,18 @@
+# Highlighter theme
+# Warm black, chartreuse marker, rust, and dusty blue.
+name = "highlighter"
+syntax_style = "gruvbox"
+
+[palette]
+foreground = "#E9E7DB"
+muted = "#9C9F8C"
+border = "#4B4F3F"
+border_focus = "#BECB72"
+selection_background = "#BECB72"
+selection_foreground = "#15160F"
+accent = "#BECB72"
+directory = "#D98262"
+heading = "#D98262"
+link = "#7FB5C8"
+code = "#7FB5C8"
+status = "#BECB72"

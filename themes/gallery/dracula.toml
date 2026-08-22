@@ -1,0 +1,18 @@
+# Dracula theme
+name = "dracula"
+syntax_style = "dracula"
+
+[palette]
+background = "#282A36"
+foreground = "#F8F8F2"
+muted = "#6272A4"
+border = "#44475A"
+border_focus = "#BD93F9"
+selection_background = "#BD93F9"
+selection_foreground = "#282A36"
+accent = "#BD93F9"
+directory = "#8BE9FD"
+heading = "#F1FA8C"
+link = "#8BE9FD"
+code = "#50FA7B"
+status = "#BD93F9"

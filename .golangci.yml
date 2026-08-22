@@ -1,0 +1,36 @@
+version: "2"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: strict
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - errorlint
+    - asciicheck
+    - bidichk
+    - durationcheck
+    - errname
+    - gochecknoinits
+    - nilerr
+    - reassign
+    - wastedassign
+    - misspell
+    - nolintlint
+  settings:
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+      allow-no-explanation: []
+  exclusions:
+    generated: strict

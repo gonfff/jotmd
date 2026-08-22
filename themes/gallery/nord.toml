@@ -1,0 +1,18 @@
+# Nord theme
+name = "nord"
+syntax_style = "nord"
+
+[palette]
+background = "#2E3440"
+foreground = "#D8DEE9"
+muted = "#7B88A1"
+border = "#4C566A"
+border_focus = "#88C0D0"
+selection_background = "#88C0D0"
+selection_foreground = "#2E3440"
+accent = "#88C0D0"
+directory = "#81A1C1"
+heading = "#EBCB8B"
+link = "#88C0D0"
+code = "#A3BE8C"
+status = "#88C0D0"

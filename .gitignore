@@ -1,0 +1,11 @@
+.DS_Store
+.idea/
+.vscode/
+.worktrees/
+bin/
+dist/
+site/
+.venv-docs/
+coverage.out
+coverage.html
+vault/
