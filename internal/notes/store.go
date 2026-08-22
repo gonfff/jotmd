@@ -17,6 +17,9 @@ const (
 type FileIdentity struct {
 	Device uint64
 	Inode  uint64
+
+	versionSeconds     int64
+	versionNanoseconds int64
 }
 
 type Entry struct {

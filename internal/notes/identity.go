@@ -34,7 +34,7 @@ func fileIdentity(file *os.File) (FileIdentity, error) {
 	if err := unix.Fstat(int(file.Fd()), &stat); err != nil {
 		return FileIdentity{}, fmt.Errorf("stat opened entry: %w", err)
 	}
-	return FileIdentity{Device: uint64(stat.Dev), Inode: stat.Ino}, nil
+	return identityFromStat(&stat), nil
 }
 
 func mutationParent(path RelPath) (RelPath, string, error) {
