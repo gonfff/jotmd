@@ -1,0 +1,18 @@
+# Tokyo Night theme
+name = "tokyo-night"
+syntax_style = "tokyonight-night"
+
+[palette]
+background = "#1A1B26"
+foreground = "#C0CAF5"
+muted = "#565F89"
+border = "#3B4261"
+border_focus = "#7AA2F7"
+selection_background = "#7AA2F7"
+selection_foreground = "#1A1B26"
+accent = "#7AA2F7"
+directory = "#7DCFFF"
+heading = "#E0AF68"
+link = "#7AA2F7"
+code = "#9ECE6A"
+status = "#7AA2F7"

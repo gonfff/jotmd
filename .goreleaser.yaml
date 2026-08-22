@@ -1,0 +1,52 @@
+version: 2
+
+project_name: jotmd
+
+metadata:
+  mod_timestamp: "{{ .CommitTimestamp }}"
+
+builds:
+  - id: jotmd
+    main: ./cmd/jotmd
+    binary: jotmd
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - id: jotmd
+    ids:
+      - jotmd
+    formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: checksums.txt
+
+homebrew_casks:
+  - name: jotmd
+    ids:
+      - jotmd
+    binaries:
+      - jotmd
+    directory: Casks
+    homepage: https://github.com/gonfff/jotmd
+    description: Terminal Markdown notes app
+    skip_upload: auto
+    repository:
+      owner: gonfff
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"

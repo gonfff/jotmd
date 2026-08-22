@@ -1,0 +1,18 @@
+# Gruvbox dark theme
+name = "gruvbox-dark"
+syntax_style = "gruvbox"
+
+[palette]
+background = "#282828"
+foreground = "#EBDBB2"
+muted = "#928374"
+border = "#504945"
+border_focus = "#FABD2F"
+selection_background = "#FABD2F"
+selection_foreground = "#282828"
+accent = "#FABD2F"
+directory = "#83A598"
+heading = "#FE8019"
+link = "#83A598"
+code = "#B8BB26"
+status = "#FABD2F"

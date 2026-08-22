@@ -1,0 +1,18 @@
+# Catppuccin Mocha theme
+name = "catppuccin-mocha"
+syntax_style = "catppuccin-mocha"
+
+[palette]
+background = "#1E1E2E"
+foreground = "#CDD6F4"
+muted = "#7F849C"
+border = "#45475A"
+border_focus = "#89B4FA"
+selection_background = "#89B4FA"
+selection_foreground = "#1E1E2E"
+accent = "#89B4FA"
+directory = "#A6E3A1"
+heading = "#F9E2AF"
+link = "#89B4FA"
+code = "#A6E3A1"
+status = "#89B4FA"

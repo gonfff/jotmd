@@ -1,0 +1,50 @@
+# JotMD configuration. CLI flags override environment variables, which override
+# this file. Uncomment only the settings you want to change.
+
+# Directory containing Markdown notes.
+# notes_dir = "~/notes"
+
+# Editor executable and its arguments. When omitted, JotMD uses $EDITOR.
+# editor = ["nvim"]
+
+# Theme filename from the sibling themes directory, without .toml.
+# theme = "jotmd"
+
+# Optional semantic color overrides for the selected theme.
+# theme_colors = { accent = "#CBA6F7" }
+
+# Tree width as a percentage; the rendered pane is clamped to 24–48 columns.
+# tree_width = 20
+
+# Disable ANSI colors.
+# no_color = false
+
+# Include dotfiles and hidden directories.
+# show_hidden = false
+
+# File or directory names excluded from the notes tree and search.
+# ignore = [".obsidian", ".git"]
+
+# Entry ordering. Only name sorting is currently supported.
+# sort = "name"
+
+# Keep directories before notes. This must currently remain enabled.
+# directories_first = true
+
+# Show the bottom status bar while browsing.
+# status_bar = true
+
+# Watch the notes directory and configuration for changes.
+# watch = true
+
+# Markdown preview settings.
+# [preview]
+
+# Soft-wrap preview content to the pane width.
+# wrap = true
+
+# Markdown rendering style: quiet, surface, or structural.
+# render_style = "quiet"
+
+# Maximum note size read for preview, in bytes (maximum 67108864).
+# max_bytes = 2097152

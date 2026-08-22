@@ -1,0 +1,18 @@
+# Field Notes theme
+# The standalone version of JotMD's graphite and sage default.
+name = "field-notes"
+syntax_style = "rose-pine"
+
+[palette]
+foreground = "#E9E2D5"
+muted = "#9D9B8D"
+border = "#45504A"
+border_focus = "#77AD91"
+selection_background = "#77AD91"
+selection_foreground = "#101512"
+accent = "#77AD91"
+directory = "#E1B866"
+heading = "#E1B866"
+link = "#7FA8B8"
+code = "#D88762"
+status = "#77AD91"

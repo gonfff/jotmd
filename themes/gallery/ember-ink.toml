@@ -1,0 +1,18 @@
+# Ember Ink theme
+# Warm ink, coral, paper gold, and calm green.
+name = "ember-ink"
+syntax_style = "rose-pine-moon"
+
+[palette]
+foreground = "#E8E1D7"
+muted = "#A79C91"
+border = "#514944"
+border_focus = "#E07A5F"
+selection_background = "#E07A5F"
+selection_foreground = "#171615"
+accent = "#E07A5F"
+directory = "#F2CC8F"
+heading = "#E07A5F"
+link = "#7FA8B8"
+code = "#81B29A"
+status = "#E07A5F"
