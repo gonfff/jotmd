@@ -26,7 +26,7 @@ check:
     @just test
 
 release-check:
-    @goreleaser check
+    @just release-snapshot
 
 release-snapshot:
     #!/bin/sh
@@ -34,7 +34,7 @@ release-snapshot:
     goreleaser release --snapshot --clean
     test "$(find dist -maxdepth 1 -type f -name 'jotmd_*_*.tar.gz' | wc -l | tr -d ' ')" -eq 2
     test -f dist/checksums.txt
-    test -f dist/homebrew/Casks/jotmd.rb
+    test -f dist/homebrew/Formula/jotmd.rb
     (
         cd dist
         if command -v shasum >/dev/null 2>&1; then
