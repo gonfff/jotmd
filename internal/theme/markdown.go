@@ -21,7 +21,6 @@ type Renderer struct {
 }
 
 const (
-	// ponytail: private-use markers avoid maintaining a second Markdown renderer; replace when Glamour exposes code-block hooks.
 	codeBlockStart = '\ue000'
 	codeBlockEnd   = '\ue001'
 )

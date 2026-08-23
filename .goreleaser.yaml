@@ -35,13 +35,11 @@ archives:
 checksum:
   name_template: checksums.txt
 
-homebrew_casks:
+brews:
   - name: jotmd
     ids:
       - jotmd
-    binaries:
-      - jotmd
-    directory: Casks
+    directory: Formula
     homepage: https://github.com/gonfff/jotmd
     description: Terminal Markdown notes app
     skip_upload: auto
