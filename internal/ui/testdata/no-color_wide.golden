@@ -3,9 +3,9 @@
 ║    2025.md           ║│ Jot                                                                                          │
 ║  ▾ projects          ║│ Fast terminal notes.                                                                         │
 ║>   jot.md            ║│                                                                                              │
-║  welcome.md          ║│ ☑ semantic themes                                                                            │
-║                      ║│ ☑ live preview                                                                               │
-║                      ║│ ☐ ship it                                                                                    │
+║  welcome.md          ║│ [✓] semantic themes                                                                          │
+║                      ║│ [✓] live preview                                                                             │
+║                      ║│ [ ] ship it                                                                                  │
 ║                      ║│                                                                                              │
 ║                      ║│                                                                                              │
 ║                      ║│                                                                                              │

@@ -229,7 +229,7 @@ func markdownStyles(theme Theme, renderStyle string) ansi.StyleConfig {
 		}},
 		List:     ansi.StyleList{StyleBlock: ansi.StyleBlock{StylePrimitive: primitive(p.Foreground, "")}},
 		Item:     ansi.StylePrimitive{BlockPrefix: "• ", Color: color(p.Directory)},
-		Task:     ansi.StyleTask{StylePrimitive: ansi.StylePrimitive{Color: color(p.Accent)}, Ticked: "☑ ", Unticked: "☐ "},
+		Task:     ansi.StyleTask{StylePrimitive: ansi.StylePrimitive{Color: color(p.Accent)}, Ticked: "[✓] ", Unticked: "[ ] "},
 		Heading:  ansi.StyleBlock{StylePrimitive: ansi.StylePrimitive{Color: color(p.Heading), Bold: boolPointer(true)}},
 		H1:       ansi.StyleBlock{StylePrimitive: ansi.StylePrimitive{Color: color(p.Heading), Bold: boolPointer(true)}},
 		H2:       ansi.StyleBlock{StylePrimitive: ansi.StylePrimitive{Color: color(p.Heading), Bold: boolPointer(true)}},

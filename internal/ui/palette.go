@@ -113,8 +113,8 @@ func (m Model) paletteActionState(action Action) (bool, string) {
 			return false, "select an entry"
 		}
 	case ActionCopy, ActionMove:
-		if !selected || entry.Kind != notes.KindMarkdown {
-			return false, "select a note"
+		if !selected {
+			return false, "select an entry"
 		}
 	}
 	return true, ""

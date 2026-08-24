@@ -223,7 +223,9 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case mutationResult:
 		m.pendingSelect = message.path
 		m.mutationStatus = ""
-		if message.err != nil {
+		if errors.Is(message.err, notes.ErrTrashPermissionDenied) {
+			m.mutationStatus = "Enable terminal → Finder: Privacy & Security › Automation"
+		} else if message.err != nil {
 			m.mutationStatus = fmt.Sprintf("mutation: %v", message.err)
 		}
 		m.status = m.mutationStatus
@@ -524,9 +526,6 @@ func (m Model) dispatchAction(action Action) (tea.Model, tea.Cmd) {
 	case ActionNewNote, ActionNewDirectory, ActionRename, ActionCopy, ActionMove, ActionTrash, ActionDelete:
 		entry, ok := m.tree.Selected()
 		if !ok && action != ActionNewNote && action != ActionNewDirectory {
-			return m, nil
-		}
-		if (action == ActionCopy || action == ActionMove) && entry.Kind != notes.KindMarkdown {
 			return m, nil
 		}
 		if action == ActionNewNote && isOnlyRootDirectory(m.tree.snapshot, entry) {

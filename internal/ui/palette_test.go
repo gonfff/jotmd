@@ -81,6 +81,16 @@ func TestActionPaletteFiltersDisablesDispatchesAndCancels(t *testing.T) {
 	}
 }
 
+func TestActionPaletteEnablesCopyAndMoveForDirectory(t *testing.T) {
+	model := sizedLoadedModel(t)
+	model.tree, _ = model.tree.Select("docs")
+	for _, action := range []Action{ActionCopy, ActionMove} {
+		if enabled, reason := model.paletteActionState(action); !enabled {
+			t.Errorf("%s enabled = false (%q), want true", action, reason)
+		}
+	}
+}
+
 func TestActionPaletteOpensFromSearchAndOmitsModalControls(t *testing.T) {
 	model := sizedLoadedModel(t)
 	model = updateModel(t, model, key("tab"))

@@ -7,6 +7,7 @@ import (
 )
 
 var ErrTrashCrossFilesystem = errors.New("system trash is on another filesystem")
+var ErrTrashPermissionDenied = errors.New("system trash permission denied")
 
 func trashInfo(absolutePath string, deleted time.Time) string {
 	encoded := (&url.URL{Path: absolutePath}).EscapedPath()

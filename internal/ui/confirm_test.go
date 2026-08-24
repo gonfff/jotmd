@@ -147,6 +147,16 @@ func TestTrashConflictRescansWithoutPermanentDeleteFallback(t *testing.T) {
 	}
 }
 
+func TestTrashPermissionDeniedShowsAutomationInstructionsInStatusBar(t *testing.T) {
+	model := updateModel(t, sizedLoadedModel(t), mutationResult{err: notes.ErrTrashPermissionDenied})
+	status := ansi.Strip(model.statusView(model.width, model.focus))
+	for _, want := range []string{"Finder", "Privacy & Security", "Automation"} {
+		if !strings.Contains(status, want) {
+			t.Fatalf("status = %q, want %q", status, want)
+		}
+	}
+}
+
 func TestPermanentDeleteDeletesOnY(t *testing.T) {
 	model := sizedLoadedModel(t)
 	root := model.storeRootForTest(t)
