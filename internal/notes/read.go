@@ -2,8 +2,6 @@ package notes
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -24,7 +22,10 @@ const (
 	maxReadBytes        int64 = 64 * 1024 * 1024
 )
 
-var ErrNoteTooLarge = errors.New("note exceeds preview size limit")
+var (
+	ErrNoteTooLarge   = errors.New("note exceeds preview size limit")
+	ErrNotRegularFile = errors.New("note is not a regular file")
+)
 
 type TooLargeError struct {
 	Size  int64
@@ -66,7 +67,7 @@ func (s *Store) Read(ctx context.Context, path RelPath) (document Document, err 
 		return Document{}, fmt.Errorf("stat note %q: %w", path, err)
 	}
 	if !info.Mode().IsRegular() {
-		return Document{}, fmt.Errorf("note %q is not a regular file", path)
+		return Document{}, fmt.Errorf("%w: %q", ErrNotRegularFile, path)
 	}
 	if info.Size() > s.readMaxBytes {
 		return Document{}, &TooLargeError{Size: info.Size(), Limit: s.readMaxBytes}
@@ -85,11 +86,10 @@ func (s *Store) Read(ctx context.Context, path RelPath) (document Document, err 
 	if err := ctx.Err(); err != nil {
 		return Document{}, err
 	}
-	sum := sha256.Sum256(content)
 	return Document{
 		Path:     path,
 		Content:  content,
-		Revision: Revision("sha256:" + hex.EncodeToString(sum[:])),
+		Revision: revisionBytes(content),
 		Modified: info.ModTime(),
 	}, nil
 }

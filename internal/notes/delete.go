@@ -44,6 +44,63 @@ func (s *Store) Delete(ctx context.Context, path RelPath, expected FileIdentity)
 	return nil
 }
 
+func (s *Store) DeleteRevision(ctx context.Context, path RelPath, expected Revision) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	parsed, err := ParseRevision(string(expected))
+	if err != nil {
+		return err
+	}
+	parent, name, err := mutationParent(path)
+	if err != nil {
+		return err
+	}
+	if err := validateNotePath(path, name); err != nil {
+		return err
+	}
+	directory, err := s.openParent(parent)
+	if err != nil {
+		return fmt.Errorf("open delete parent %q: %w", parent, err)
+	}
+	defer directory.Close()
+	current, err := lstatChild(int(directory.Fd()), name)
+	if errors.Is(err, unix.ENOENT) {
+		return &RevisionConflictError{Expected: parsed, Actual: ""}
+	}
+	if err != nil {
+		return fmt.Errorf("stat note %q: %w", path, err)
+	}
+	if !current.regular || current.symlink {
+		return fmt.Errorf("%w: %q", ErrNotRegularFile, path)
+	}
+	staged, err := stageCheckedEntry(int(directory.Fd()), name, current.identity)
+	if err != nil {
+		if errors.Is(err, ErrConflict) {
+			return &RevisionConflictError{Expected: parsed, Actual: ""}
+		}
+		return fmt.Errorf("delete %q: %w", path, err)
+	}
+	defer staged.Close()
+	if err := ctx.Err(); err != nil {
+		return staged.restore(err)
+	}
+	actual, err := stagedRevision(staged)
+	if err != nil {
+		return staged.restore(fmt.Errorf("revision note %q: %w", path, err))
+	}
+	if actual != parsed {
+		return staged.restore(&RevisionConflictError{Expected: parsed, Actual: actual})
+	}
+	if err := deleteEntry(int(staged.directory.Fd()), name, current.identity, false); err != nil {
+		return staged.restore(fmt.Errorf("delete %q: %w", path, err))
+	}
+	if err := staged.remove(nil); err != nil {
+		return errors.Join(ErrRecoveryRequired, fmt.Errorf("finish deleting note %q: %w", path, err))
+	}
+	return nil
+}
+
 func deleteEntry(parentFD int, name string, expected FileIdentity, allowSymlink bool) error {
 	info, err := checkedChild(parentFD, name, expected, allowSymlink)
 	if err != nil {

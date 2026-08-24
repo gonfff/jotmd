@@ -2,8 +2,6 @@ package notes
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -48,11 +46,10 @@ func (s *Store) CreateNote(ctx context.Context, parent RelPath, title string) (D
 		if err := closeCreatedNote(file, joinRelPath(parent, candidate)); err != nil {
 			return Document{}, err
 		}
-		sum := sha256.Sum256(nil)
 		return Document{
 			Path:     joinRelPath(parent, candidate),
 			Content:  []byte{},
-			Revision: Revision("sha256:" + hex.EncodeToString(sum[:])),
+			Revision: revisionBytes(nil),
 			Modified: time.Now(),
 		}, nil
 	}

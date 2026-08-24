@@ -31,6 +31,7 @@ type Match struct {
 type SearchStats struct {
 	FilesScanned int
 	FilesSkipped int
+	Truncated    bool
 }
 
 func RankPaths(snapshot Snapshot, query string, limit int) []Match {
@@ -72,7 +73,7 @@ func (s *Store) SearchContent(ctx context.Context, query string, maxFileBytes in
 		return nil, SearchStats{}, err
 	}
 	normalized := caseFoldKey(query)
-	matches := make([]Match, 0, min(limit, 16))
+	matches := make([]Match, 0, min(limit+1, 16))
 	stats := SearchStats{}
 	for _, entry := range snapshot.Entries {
 		if err := ctx.Err(); err != nil {
@@ -104,8 +105,9 @@ func (s *Store) SearchContent(ctx context.Context, query string, maxFileBytes in
 			normalizedLine := caseFoldKey(line)
 			if matchByte := strings.Index(normalizedLine, normalized); matchByte >= 0 {
 				matches = append(matches, Match{Path: entry.Path, Kind: MatchContent, Line: lineIndex + 1, Snippet: searchSnippet(line, normalizedLine, matchByte)})
-				if len(matches) == limit {
-					return matches, stats, nil
+				if len(matches) > limit {
+					stats.Truncated = true
+					return matches[:limit], stats, nil
 				}
 			}
 		}

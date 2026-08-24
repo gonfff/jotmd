@@ -138,6 +138,34 @@ func TestSearchContentSkipsLargeFilesCapsResultsAndCancels(t *testing.T) {
 	}
 }
 
+func TestSearchContentReportsOnlyRealTruncation(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		lines     int
+		truncated bool
+	}{
+		{name: "exact limit", lines: 2, truncated: false},
+		{name: "more than limit", lines: 3, truncated: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			root := t.TempDir()
+			writeTree(t, root, nil, []treeFile{{path: "note.md", content: strings.Repeat("needle\n", tt.lines), mode: 0o600}})
+			store, err := NewStore(root, nil, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			matches, stats, err := store.SearchContent(context.Background(), "needle", 1024, 2)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(matches) != 2 || stats.Truncated != tt.truncated {
+				t.Fatalf("SearchContent() = %d matches, %#v", len(matches), stats)
+			}
+		})
+	}
+}
+
 func TestSearchContentSkipsFilesAboveEightMiB(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, "large.md")

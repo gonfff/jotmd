@@ -28,20 +28,25 @@ func stageCheckedEntry(parentFD int, name string, expected FileIdentity) (*stage
 	if err != nil {
 		return nil, err
 	}
-	if err := renameNoReplace(parentFD, name, int(staged.directory.Fd()), name); err != nil {
+	if err := staged.stage(expected); err != nil {
+		return nil, staged.closeAndRemove(err)
+	}
+	return staged, nil
+}
+
+func (staged *stagedEntry) stage(expected FileIdentity) error {
+	if err := renameNoReplace(staged.parentFD, staged.name, int(staged.directory.Fd()), staged.name); err != nil {
 		cause := err
 		if errors.Is(err, unix.ENOENT) {
 			cause = ErrConflict
 		}
-		return nil, staged.closeAndRemove(fmt.Errorf("stage entry: %w", cause))
+		return fmt.Errorf("stage entry: %w", cause)
 	}
-	if _, err := checkedChild(int(staged.directory.Fd()), name, expected, false); err != nil {
+	if _, err := checkedChild(int(staged.directory.Fd()), staged.name, expected, false); err != nil {
 		cause := fmt.Errorf("verify staged entry: %w", err)
-		restoreErr := staged.restore(cause)
-		_ = staged.Close()
-		return nil, restoreErr
+		return staged.restoreEntry(cause)
 	}
-	return staged, nil
+	return nil
 }
 
 func createMutationStaging(parentFD int, name string) (*stagedEntry, error) {
@@ -71,14 +76,22 @@ func createMutationStaging(parentFD int, name string) (*stagedEntry, error) {
 }
 
 func (staged *stagedEntry) restore(cause error) error {
+	cause = staged.restoreEntry(cause)
+	if errors.Is(cause, ErrRecoveryRequired) {
+		return cause
+	}
+	return staged.remove(cause)
+}
+
+func (staged *stagedEntry) restoreEntry(cause error) error {
 	err := renameNoReplace(int(staged.directory.Fd()), staged.name, staged.parentFD, staged.name)
 	if err != nil {
 		if errors.Is(err, unix.EEXIST) {
 			err = ErrExists
 		}
-		return errors.Join(cause, fmt.Errorf("restore failed; source remains staged at %q: %w", filepath.Join(staged.path, staged.name), err))
+		return errors.Join(cause, ErrRecoveryRequired, fmt.Errorf("restore failed; source remains staged at %q: %w", filepath.Join(staged.path, staged.name), err))
 	}
-	return staged.remove(cause)
+	return cause
 }
 
 func (staged *stagedEntry) remove(cause error) error {
