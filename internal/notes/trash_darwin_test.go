@@ -29,12 +29,19 @@ func TestFinderTrashCommandPassesPathAsOpaqueArgument(t *testing.T) {
 	want := []string{
 		"/usr/bin/osascript",
 		"-e",
-		"on run argv\ntell application \"Finder\" to delete POSIX file (item 1 of argv)\nend run",
+		"on run argv\nset targetFile to POSIX file (item 1 of argv) as alias\ntell application \"Finder\" to delete targetFile\nend run",
 		"--",
 		path,
 	}
 	if command.Path != "/usr/bin/osascript" || !reflect.DeepEqual(command.Args, want) {
 		t.Errorf("finderTrashCommand() path/args = %q, %#v, want %q, %#v", command.Path, command.Args, "/usr/bin/osascript", want)
+	}
+}
+
+func TestFinderTrashErrorClassifiesAutomationDenial(t *testing.T) {
+	err := finderTrashError([]byte("execution error: Not authorized to send Apple events to Finder. (-1743)"), errors.New("exit status 1"))
+	if !errors.Is(err, ErrTrashPermissionDenied) {
+		t.Errorf("finderTrashError() = %v, want %v", err, ErrTrashPermissionDenied)
 	}
 }
 

@@ -246,13 +246,24 @@ func TestCopyAndMoveSuggestionUsesMutedForegroundAndHidesExactInput(t *testing.T
 	}
 }
 
-func TestCopyAndMoveRequireSelectedNote(t *testing.T) {
-	for _, keyValue := range []string{"c", "m"} {
+func TestCopyAndMoveAcceptSelectedDirectory(t *testing.T) {
+	for _, test := range []struct {
+		key  string
+		mode Mode
+	}{
+		{key: "c", mode: CopyPrompt},
+		{key: "m", mode: MovePrompt},
+	} {
 		model := sizedLoadedModel(t)
 		model.tree, _ = model.tree.Select("docs")
-		model = updateModel(t, model, key(keyValue))
-		if model.mode != Browse {
-			t.Errorf("key %q on directory mode = %v, want Browse", keyValue, model.mode)
+		model = updateModel(t, model, key(test.key))
+		if model.mode != test.mode || model.modalEntry.Path != "docs" {
+			t.Errorf("key %q on directory = (%v, %q), want (%v, docs)", test.key, model.mode, model.modalEntry.Path, test.mode)
+		}
+		for _, suggestion := range model.input.AvailableSuggestions() {
+			if suggestion == "docs" || strings.HasPrefix(suggestion, "docs/") {
+				t.Errorf("key %q suggested destination inside source: %q", test.key, suggestion)
+			}
 		}
 	}
 }

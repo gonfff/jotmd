@@ -39,9 +39,15 @@ func newPrompt(mode Mode, selected notes.Entry, snapshot notes.Snapshot) textinp
 		input.SetValue(selected.Name)
 	} else if mode == CopyPrompt || mode == MovePrompt {
 		input.ShowSuggestions = true
-		suggestions := []string{path.Join("", selected.Name)}
+		suggestions := []string{}
+		if selected.Kind != notes.KindDirectory || parentPath(selected.Path) != "" {
+			suggestions = append(suggestions, path.Join("", selected.Name))
+		}
 		for _, entry := range snapshot.Entries {
 			if entry.Kind == notes.KindDirectory {
+				if selected.Kind == notes.KindDirectory && (entry.Path == selected.Path || strings.HasPrefix(string(entry.Path), string(selected.Path)+"/")) {
+					continue
+				}
 				suggestions = append(suggestions, path.Join(string(entry.Path), selected.Name))
 			}
 		}

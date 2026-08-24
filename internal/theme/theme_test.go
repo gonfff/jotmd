@@ -47,7 +47,7 @@ func TestMarkdownRendererRendersRequiredConstructs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	doc := notes.Document{Content: []byte("# Heading\n\n- item\n- [x] done\n\n```go\ncode()\n```\n\n`inline` [link](https://example.com)\n\n> quote\n\n---\n")}
+	doc := notes.Document{Content: []byte("# Heading\n\n- item\n- [x] done\n- [ ] todo\n\n```go\ncode()\n```\n\n`inline` [link](https://example.com)\n\n> quote\n\n---\n")}
 
 	rendered, err := renderer.Render(doc)
 	if err != nil {
@@ -58,8 +58,9 @@ func TestMarkdownRendererRendersRequiredConstructs(t *testing.T) {
 			t.Errorf("Render() = %q, missing %q", rendered, want)
 		}
 	}
-	for _, want := range []string{"☑", "─"} {
-		if !strings.Contains(rendered, want) {
+	plain := xansi.Strip(rendered)
+	for _, want := range []string{"[✓] done", "[ ] todo", "─"} {
+		if !strings.Contains(plain, want) {
 			t.Errorf("Render() = %q, missing Markdown marker %q", rendered, want)
 		}
 	}

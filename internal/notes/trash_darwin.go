@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const finderTrashScript = "on run argv\ntell application \"Finder\" to delete POSIX file (item 1 of argv)\nend run"
+const finderTrashScript = "on run argv\nset targetFile to POSIX file (item 1 of argv) as alias\ntell application \"Finder\" to delete targetFile\nend run"
 
 func (s *Store) Trash(ctx context.Context, path RelPath, expected FileIdentity) error {
 	if err := ctx.Err(); err != nil {
@@ -48,11 +48,19 @@ func finishStagedTrash(ctx context.Context, path RelPath, expected FileIdentity,
 }
 
 var runFinderTrash = func(ctx context.Context, path string) error {
-	return finderTrashCommand(ctx, path).Run()
+	output, err := finderTrashCommand(ctx, path).CombinedOutput()
+	return finderTrashError(output, err)
 }
 
 func finderTrashCommand(ctx context.Context, path string) *exec.Cmd {
 	return exec.CommandContext(ctx, "/usr/bin/osascript", "-e", finderTrashScript, "--", path)
+}
+
+func finderTrashError(output []byte, err error) error {
+	if err != nil && bytes.Contains(output, []byte("(-1743)")) {
+		return ErrTrashPermissionDenied
+	}
+	return err
 }
 
 func descriptorPath(fd int) (string, error) {

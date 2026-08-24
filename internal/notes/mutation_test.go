@@ -233,6 +233,128 @@ func TestMoveNoteMovesAcrossDirectoriesWithoutOverwriting(t *testing.T) {
 	}
 }
 
+func TestCopyDirectoryCopiesTreeWithoutOverwritingOrNestingInItself(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root, []string{"docs/guide", "archive"}, []treeFile{
+		{path: "docs/guide/note.md", content: "note", mode: 0o600},
+		{path: "docs/asset.txt", content: "asset", mode: 0o600},
+	})
+	makeSymlink(t, "guide/note.md", filepath.Join(root, "docs", "link.md"))
+	store, err := NewStore(root, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := identityFor(t, store, "docs")
+
+	got, err := store.Copy(context.Background(), "docs", "archive/docs", expected)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "archive/docs" {
+		t.Errorf("Copy() path = %q, want archive/docs", got)
+	}
+	for path, want := range map[string]string{
+		"docs/guide/note.md":         "note",
+		"archive/docs/guide/note.md": "note",
+		"archive/docs/asset.txt":     "asset",
+	} {
+		content, err := os.ReadFile(filepath.Join(root, path))
+		if err != nil || string(content) != want {
+			t.Errorf("%s content = %q, error = %v", path, content, err)
+		}
+	}
+	if target, err := os.Readlink(filepath.Join(root, "archive", "docs", "link.md")); err != nil || target != "guide/note.md" {
+		t.Errorf("copied symlink target = %q, error = %v", target, err)
+	}
+	if _, err := store.Copy(context.Background(), "docs", "archive/docs", expected); !errors.Is(err, ErrExists) {
+		t.Errorf("Copy() collision error = %v, want %v", err, ErrExists)
+	}
+	if _, err := store.Copy(context.Background(), "docs", "docs/copy", expected); err == nil {
+		t.Fatal("Copy() into source error = nil, want rejection")
+	}
+	if _, err := os.Stat(filepath.Join(root, "docs", "copy")); !os.IsNotExist(err) {
+		t.Errorf("nested copy stat error = %v, want not exist", err)
+	}
+	assertNoStagingDirectories(t, filepath.Join(root, "archive"))
+}
+
+func TestCopyEntryRejectsMutationStagingDirectory(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root, []string{"source/" + mutationStagingPrefix + "race"}, nil)
+	store, err := NewStore(root, nil, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	directory, err := store.openParent("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer directory.Close()
+
+	err = copyEntry(context.Background(), int(directory.Fd()), "source", int(directory.Fd()), "copy", identityFor(t, store, "source"), false)
+	if !errors.Is(err, ErrConflict) {
+		t.Fatalf("copyEntry() staging child error = %v, want %v", err, ErrConflict)
+	}
+}
+
+func TestMoveDirectoryMovesTreeWithoutOverwritingOrNestingInItself(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root, []string{"docs/guide", "other", "self/child", "archive"}, []treeFile{
+		{path: "docs/guide/note.md", content: "note", mode: 0o600},
+		{path: "other/keep.md", content: "keep", mode: 0o600},
+	})
+	store, err := NewStore(root, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := store.Move(context.Background(), "docs", "archive/docs", identityFor(t, store, "docs"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "archive/docs" {
+		t.Errorf("Move() path = %q, want archive/docs", got)
+	}
+	if _, err := os.Stat(filepath.Join(root, "docs")); !os.IsNotExist(err) {
+		t.Errorf("source stat error = %v, want not exist", err)
+	}
+	if content, err := os.ReadFile(filepath.Join(root, "archive", "docs", "guide", "note.md")); err != nil || string(content) != "note" {
+		t.Errorf("moved content = %q, error = %v", content, err)
+	}
+	if _, err := store.Move(context.Background(), "other", "archive/docs", identityFor(t, store, "other")); !errors.Is(err, ErrExists) {
+		t.Errorf("Move() collision error = %v, want %v", err, ErrExists)
+	}
+	if content, err := os.ReadFile(filepath.Join(root, "other", "keep.md")); err != nil || string(content) != "keep" {
+		t.Errorf("collision source content = %q, error = %v", content, err)
+	}
+	if _, err := store.Move(context.Background(), "self", "self/child/nested", identityFor(t, store, "self")); err == nil {
+		t.Fatal("Move() into source error = nil, want rejection")
+	}
+	if _, err := os.Stat(filepath.Join(root, "self")); err != nil {
+		t.Errorf("self-nesting rejection removed source: %v", err)
+	}
+}
+
+func TestMoveDirectoryRejectsCaseInsensitiveAliasNesting(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root, []string{"Docs/child"}, nil)
+	if _, err := os.Stat(filepath.Join(root, "docs")); err != nil {
+		t.Skip("filesystem is case-sensitive")
+	}
+	store, err := NewStore(root, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := store.Move(context.Background(), "Docs", "docs/child/nested", identityFor(t, store, "Docs")); !errors.Is(err, ErrConflict) {
+		t.Fatalf("Move() alias nesting error = %v, want %v", err, ErrConflict)
+	}
+	if _, err := os.Stat(filepath.Join(root, "Docs")); err != nil {
+		t.Errorf("alias nesting rejection removed source: %v", err)
+	}
+	assertNoStagingDirectories(t, root)
+}
+
 func TestStageCheckedEntryRejectsReplacementAfterPriorCheck(t *testing.T) {
 	root := t.TempDir()
 	writeTree(t, root, nil, []treeFile{{path: "note.md", content: "original", mode: 0o600}})
