@@ -6,11 +6,52 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/sys/unix"
 )
+
+func TestParseRevisionAcceptsOnlySHA256Tokens(t *testing.T) {
+	valid := "sha256:" + strings.Repeat("A", 64)
+	got, err := ParseRevision(valid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := Revision("sha256:" + strings.Repeat("a", 64)); got != want {
+		t.Fatalf("ParseRevision(%q) = %q, want %q", valid, got, want)
+	}
+
+	for _, value := range []string{"", "abc", "sha256:abc", "sha256:" + strings.Repeat("z", 64)} {
+		if _, err := ParseRevision(value); !errors.Is(err, ErrInvalidRevision) {
+			t.Errorf("ParseRevision(%q) error = %v, want %v", value, err, ErrInvalidRevision)
+		}
+	}
+}
+
+func TestRevisionBytesMatchesReadRevision(t *testing.T) {
+	const emptyRevision = Revision("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+	if got := revisionBytes(nil); got != emptyRevision {
+		t.Fatalf("revisionBytes(nil) = %q, want %q", got, emptyRevision)
+	}
+
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "note.md"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	store, err := NewStore(root, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	document, err := store.Read(context.Background(), "note.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if document.Revision != emptyRevision {
+		t.Fatalf("Read() revision = %q, want %q", document.Revision, emptyRevision)
+	}
+}
 
 func TestReadReturnsUnmodifiedContentAndContentRevision(t *testing.T) {
 	root := t.TempDir()

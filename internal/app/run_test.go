@@ -55,7 +55,7 @@ func TestRun(t *testing.T) {
 			name:       "prints help",
 			args:       []string{"--help"},
 			wantCode:   0,
-			wantStdout: "Usage: jotmd [--help] [--version] [--notes-dir PATH] [--theme THEME] [--editor COMMAND] [--init-config] [--init-themes] [--list-themes] [--dump-theme NAME] [--dump-config] [--dump-keys] | jotmd config check [PATH]\n",
+			wantStdout: rootUsage,
 		},
 		{
 			name:       "prints version",
@@ -67,7 +67,7 @@ func TestRun(t *testing.T) {
 			name:       "rejects unknown flag",
 			args:       []string{"--unknown"},
 			wantCode:   2,
-			wantStdout: "Usage: jotmd [--help] [--version] [--notes-dir PATH] [--theme THEME] [--editor COMMAND] [--init-config] [--init-themes] [--list-themes] [--dump-theme NAME] [--dump-config] [--dump-keys] | jotmd config check [PATH]\n",
+			wantStdout: rootUsage,
 			wantStderr: "flag provided but not defined: -unknown\n",
 		},
 	}

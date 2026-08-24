@@ -37,11 +37,19 @@ func Version() string {
 }
 
 func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.Writer, releaseVersion ...string) int {
+	invocation, handled, agentErr := parseAgentInvocation(args)
+	if handled {
+		if agentErr != nil {
+			return writeAgentError(stderr, invocation.jsonOutput, invalidAgentInput("%s", agentErr))
+		}
+		return runAgentCLI(ctx, invocation, stdin, stdout, stderr)
+	}
+
 	flags := flag.NewFlagSet("jotmd", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	var outputErr error
 	flags.Usage = func() {
-		_, outputErr = fmt.Fprintln(stdout, "Usage: jotmd [--help] [--version] [--notes-dir PATH] [--theme THEME] [--editor COMMAND] [--init-config] [--init-themes] [--list-themes] [--dump-theme NAME] [--dump-config] [--dump-keys] | jotmd config check [PATH]")
+		_, outputErr = io.WriteString(stdout, rootUsage)
 	}
 
 	version := flags.Bool("version", false, "print version")

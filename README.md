@@ -34,6 +34,35 @@ jotmd --notes-dir ~/notes
 
 JotMD uses `--editor` or the configured editor, then `$EDITOR`, then `vi`.
 
+## Agent CLI
+
+Four non-interactive commands cover the agent workflow while Markdown files
+remain the source of truth:
+
+```text
+jotmd [--notes-dir PATH] search [--limit N] QUERY [--json]
+jotmd [--notes-dir PATH] get PATH [--json]
+jotmd [--notes-dir PATH] write [--if-revision REVISION] PATH [--json]
+jotmd [--notes-dir PATH] delete --if-revision REVISION PATH [--json]
+```
+
+`write` without `--if-revision` creates a missing note and refuses to overwrite
+an existing one. To update safely, read the current revision and send it back:
+
+```sh
+jotmd --notes-dir ./notes search "refresh token redis" --json
+jotmd --notes-dir ./notes get projects/foo/pitfalls.md --json > /tmp/note.json
+jq -rj '.content' /tmp/note.json > /tmp/note.md
+revision=$(jq -r '.revision' /tmp/note.json)
+
+# Edit /tmp/note.md, then update only if nobody changed the note meanwhile.
+jotmd --notes-dir ./notes write projects/foo/pitfalls.md \
+  --if-revision "$revision" < /tmp/note.md
+```
+
+`delete` applies the same revision check and permanently removes one note. It
+cannot be undone. With `--json`, successes use stdout and errors use stderr.
+
 ## What it does
 
 - Browses directories and `.md` files with a live, wrapping Markdown preview.
