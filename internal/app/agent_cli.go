@@ -160,7 +160,7 @@ func writeAgentHelp(output io.Writer, command string) error {
 	case "search":
 		help = `Usage: jotmd [--notes-dir PATH] search [--limit N] QUERY [--json]
 
-Search Markdown contents using a contiguous case-insensitive substring.
+Search Markdown paths fuzzily, then contents using a contiguous case-insensitive substring.
 --limit accepts 1..200 and defaults to 20.
 `
 	case "get":
@@ -237,10 +237,16 @@ func runSearch(ctx context.Context, store *notes.Store, invocation agentInvocati
 	if query == "" {
 		return invalidAgentInput("search query must not be empty")
 	}
-	matches, stats, err := store.SearchContent(ctx, query, 8<<20, invocation.limit)
+	snapshot, err := store.Scan(ctx)
 	if err != nil {
 		return err
 	}
+	matches := notes.RankPaths(snapshot, query, invocation.limit)
+	contentMatches, stats, err := store.SearchContent(ctx, query, 8<<20, invocation.limit-len(matches))
+	if err != nil {
+		return err
+	}
+	matches = append(matches, contentMatches...)
 	if invocation.jsonOutput {
 		results := make([]searchResultJSON, len(matches))
 		for index, match := range matches {
@@ -261,6 +267,12 @@ func runSearch(ctx context.Context, store *notes.Store, invocation agentInvocati
 		})
 	}
 	for _, match := range matches {
+		if match.Kind == notes.MatchPath {
+			if _, err := fmt.Fprintln(output, match.Path); err != nil {
+				return err
+			}
+			continue
+		}
 		if _, err := fmt.Fprintf(output, "%s:%d:  %s\n", match.Path, match.Line, match.Snippet); err != nil {
 			return err
 		}
