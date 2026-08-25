@@ -143,6 +143,34 @@ func TestRunAgentSearchJSON(t *testing.T) {
 	}
 }
 
+func TestRunAgentSearchFindsFilename(t *testing.T) {
+	root := t.TempDir()
+	writeAgentNote(t, root, "projects/filename-target.md", "unrelated body\n")
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	var stdout, stderr bytes.Buffer
+
+	code := Run(context.Background(), []string{
+		"--notes-dir", root, "search", "target", "--json",
+	}, strings.NewReader(""), &stdout, &stderr)
+
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("Run(search filename) = (%d, %q), stderr = %q", code, stdout.String(), stderr.String())
+	}
+	var got struct {
+		Results []struct {
+			Path    string `json:"path"`
+			Line    int    `json:"line"`
+			Snippet string `json:"snippet"`
+		} `json:"results"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Results) != 1 || got.Results[0].Path != "projects/filename-target.md" || got.Results[0].Line != 0 || got.Results[0].Snippet != "" {
+		t.Fatalf("search filename results = %#v", got.Results)
+	}
+}
+
 func TestRunAgentSearchReportsEmptyAndTruncatedResults(t *testing.T) {
 	root := t.TempDir()
 	writeAgentNote(t, root, "note.md", "needle one\nneedle two\n")
@@ -164,12 +192,13 @@ func TestRunAgentSearchReportsEmptyAndTruncatedResults(t *testing.T) {
 func TestRunAgentSearchPlainOutput(t *testing.T) {
 	root := t.TempDir()
 	writeAgentNote(t, root, "docs/a.md", "before\nauth token\nafter")
+	writeAgentNote(t, root, "docs/auth-guide.md", "unrelated body")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	var stdout, stderr bytes.Buffer
 
 	code := Run(context.Background(), []string{"--notes-dir", root, "search", "auth"}, strings.NewReader(""), &stdout, &stderr)
 
-	if code != 0 || stdout.String() != "docs/a.md:2:  auth token\n" || stderr.Len() != 0 {
+	if code != 0 || stdout.String() != "docs/auth-guide.md\ndocs/a.md:2:  auth token\n" || stderr.Len() != 0 {
 		t.Fatalf("Run(search) = (%d, %q, %q)", code, stdout.String(), stderr.String())
 	}
 }
