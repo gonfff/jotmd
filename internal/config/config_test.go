@@ -14,7 +14,7 @@ import (
 
 func TestDefaults(t *testing.T) {
 	want := config.Config{
-		NotesDir:         "~/notes",
+		NotesDir:         "~/vault",
 		Editor:           nil,
 		Theme:            "jotmd",
 		TreeWidth:        20,

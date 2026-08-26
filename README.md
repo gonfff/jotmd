@@ -28,8 +28,8 @@ directory if needed, and writes configuration under `~/.config/jotmd/` (or
 `$XDG_CONFIG_HOME/jotmd/`). You can also skip the prompt:
 
 ```sh
-mkdir -p ~/notes
-jotmd --notes-dir ~/notes
+mkdir -p ~/vault
+jotmd --notes-dir ~/vault
 ```
 
 JotMD uses `--editor` or the configured editor, then `$EDITOR`, then `vi`.

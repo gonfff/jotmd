@@ -56,7 +56,7 @@ type partialPreview struct {
 
 func Defaults() Config {
 	return Config{
-		NotesDir:         "~/notes",
+		NotesDir:         "~/vault",
 		Editor:           nil,
 		Theme:            "jotmd",
 		ThemeColors:      nil,

@@ -337,7 +337,7 @@ func setupFirstRun(configPath string, input io.Reader, output io.Writer) (string
 		return "", false, fmt.Errorf("stat config %q: %w", configPath, err)
 	}
 
-	defaultDir := filepath.Join(filepath.Dir(configPath), "notes")
+	defaultDir := filepath.Join(filepath.Dir(configPath), "vault")
 	if _, err := fmt.Fprintf(output, "Notes directory [%s]: ", defaultDir); err != nil {
 		return "", false, fmt.Errorf("write first-run prompt: %w", err)
 	}

@@ -219,7 +219,7 @@ func TestRunInitConfigCreatesTemplatesBeforeStartingTUI(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"# notes_dir = \"~/notes\"",
+		"# notes_dir = \"~/vault\"",
 		"# editor = [\"nvim\"]",
 		"# theme = \"jotmd\"",
 		"# theme_colors = { accent = \"#CBA6F7\" }",
@@ -268,7 +268,7 @@ func TestSetupFirstRunCreatesSiblingStoreAndPersistsOnlyItsPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantNotesDir := filepath.Join(filepath.Dir(configPath), "notes")
+	wantNotesDir := filepath.Join(filepath.Dir(configPath), "vault")
 	if !created || notesDir != wantNotesDir {
 		t.Fatalf("setupFirstRun() = (%q, %v), want (%q, true)", notesDir, created, wantNotesDir)
 	}
@@ -302,7 +302,7 @@ func TestSetupFirstRunRejectsEOFWithoutCreatingFiles(t *testing.T) {
 	if _, _, err := setupFirstRun(configPath, strings.NewReader(""), &bytes.Buffer{}); err == nil {
 		t.Fatal("setupFirstRun() EOF error = nil")
 	}
-	for _, path := range []string{configPath, config.KeymapPath(configPath), filepath.Join(filepath.Dir(configPath), "notes")} {
+	for _, path := range []string{configPath, config.KeymapPath(configPath), filepath.Join(filepath.Dir(configPath), "vault")} {
 		if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
 			t.Fatalf("EOF created %s: %v", path, err)
 		}

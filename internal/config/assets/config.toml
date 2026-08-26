@@ -2,7 +2,7 @@
 # this file. Uncomment only the settings you want to change.
 
 # Directory containing Markdown notes.
-# notes_dir = "~/notes"
+# notes_dir = "~/vault"
 
 # Editor executable and its arguments. When omitted, JotMD uses $EDITOR.
 # editor = ["nvim"]
