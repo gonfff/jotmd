@@ -1,5 +1,6 @@
-# Gruvbox dark theme
-name = "gruvbox-dark"
+# Adapted from revdiff's Gruvbox theme.
+# Original author: umputun. See ../REVDIFF-LICENSE.
+name = "gruvbox"
 syntax_style = "gruvbox"
 
 [palette]
@@ -11,8 +12,8 @@ border_focus = "#FABD2F"
 selection_background = "#FABD2F"
 selection_foreground = "#282828"
 accent = "#FABD2F"
-directory = "#83A598"
+directory = "#FABD2F"
 heading = "#FE8019"
-link = "#83A598"
+link = "#B8BB26"
 code = "#B8BB26"
 status = "#FABD2F"

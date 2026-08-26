@@ -69,7 +69,7 @@ cannot be undone. With `--json`, successes use stdout and errors use stderr.
 - Searches note names and contents; includes a table of contents and raw view.
 - Creates, renames, copies, moves, trashes, and permanently deletes notes.
 - Reloads notes, configuration, and key bindings while running.
-- Ships with 13 themes and supports custom TOML themes and color overrides.
+- Ships with 11 themes and supports custom TOML themes and color overrides.
 
 ## Essential keys
 

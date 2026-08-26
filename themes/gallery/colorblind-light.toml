@@ -1,0 +1,19 @@
+# Adapted from revdiff's Colorblind Light theme.
+# Original author: Nikita Krajcik. See ../REVDIFF-LICENSE.
+name = "colorblind-light"
+syntax_style = "modus-operandi"
+
+[palette]
+background = "#F3F3F3"
+foreground = "#000000"
+muted = "#595959"
+border = "#B0B0B0"
+border_focus = "#0031A9"
+selection_background = "#0031A9"
+selection_foreground = "#F3F3F3"
+accent = "#0031A9"
+directory = "#0031A9"
+heading = "#973300"
+link = "#0000FF"
+code = "#303099"
+status = "#0031A9"

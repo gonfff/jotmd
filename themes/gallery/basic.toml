@@ -1,0 +1,18 @@
+# Adapted from revdiff's basic theme.
+# Original author: umputun. See ../REVDIFF-LICENSE.
+name = "basic"
+syntax_style = "github-dark"
+
+[palette]
+foreground = "#D0D0D0"
+muted = "#585858"
+border = "#585858"
+border_focus = "#87AFD7"
+selection_background = "#87AFD7"
+selection_foreground = "#1A1A1A"
+accent = "#87AFD7"
+directory = "#87AFD7"
+heading = "#FFD700"
+link = "#5FAFFF"
+code = "#87D787"
+status = "#87AFD7"

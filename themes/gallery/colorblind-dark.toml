@@ -1,0 +1,19 @@
+# Adapted from revdiff's Colorblind Dark theme.
+# Original author: Nikita Krajcik. See ../REVDIFF-LICENSE.
+name = "colorblind-dark"
+syntax_style = "modus-vivendi"
+
+[palette]
+background = "#1A1A1A"
+foreground = "#FFFFFF"
+muted = "#989898"
+border = "#646464"
+border_focus = "#2FAFFF"
+selection_background = "#2FAFFF"
+selection_foreground = "#000000"
+accent = "#2FAFFF"
+directory = "#2FAFFF"
+heading = "#FFA00F"
+link = "#EFEF00"
+code = "#C4D5FF"
+status = "#2FAFFF"

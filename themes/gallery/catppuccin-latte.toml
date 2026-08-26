@@ -1,0 +1,19 @@
+# Adapted from revdiff's Catppuccin Latte theme.
+# Original author: melonamin. See ../REVDIFF-LICENSE.
+name = "catppuccin-latte"
+syntax_style = "catppuccin-latte"
+
+[palette]
+background = "#EFF1F5"
+foreground = "#4C4F69"
+muted = "#9CA0B0"
+border = "#BCC0CC"
+border_focus = "#8839EF"
+selection_background = "#8839EF"
+selection_foreground = "#EFF1F5"
+accent = "#8839EF"
+directory = "#8839EF"
+heading = "#DF8E1D"
+link = "#179299"
+code = "#40A02B"
+status = "#8839EF"

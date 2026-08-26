@@ -1,0 +1,18 @@
+# Adapted from revdiff's default theme.
+# Original author: umputun. See ../REVDIFF-LICENSE.
+name = "revdiff"
+syntax_style = "catppuccin-macchiato"
+
+[palette]
+foreground = "#D0D0D0"
+muted = "#585858"
+border = "#585858"
+border_focus = "#D5895F"
+selection_background = "#D5895F"
+selection_foreground = "#202020"
+accent = "#D5895F"
+directory = "#D5895F"
+heading = "#FFD700"
+link = "#BBBB44"
+code = "#87D787"
+status = "#C5794F"

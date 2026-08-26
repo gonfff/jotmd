@@ -214,10 +214,11 @@ func (m Model) searchPopup(width, height int) string {
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(m.theme.Palette.BorderFocus)).
+		BorderBackground(lipgloss.Color(m.theme.Palette.Background)).
 		Background(lipgloss.Color(m.theme.Palette.Background)).
 		Width(outerWidth).
 		Height(outerHeight).
-		Render(content)
+		Render(restoreBackground(content, m.theme.Palette.Background))
 }
 
 func (m Model) searchStatus(width int) string {

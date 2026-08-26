@@ -91,31 +91,54 @@ func TestBrowsePanesKeepContentOffBorders(t *testing.T) {
 	}
 }
 
-func TestBrowsePaneDoesNotPaintThemeBackground(t *testing.T) {
+func TestBrowsePanePaintsConfiguredThemeBackground(t *testing.T) {
 	for _, test := range []struct {
 		name string
+		want bool
 	}{
-		{name: "jotmd"},
-		{name: "dracula"},
+		{name: "jotmd", want: false},
+		{name: "dracula", want: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			model := testModel(t)
 			model.theme = builtinTheme(t, test.name)
 			view := model.pane([]string{"note"}, 20, 4, false, false)
-			if strings.Contains(view, "\x1b[48;2;40;42;54m") {
-				t.Fatalf("pane paints a background: %q", view)
+			if got := strings.Contains(view, "\x1b[48;2;40;42;54m"); got != test.want {
+				t.Fatalf("pane paints configured background = %t, want %t: %q", got, test.want, view)
+			}
+			if got := strings.Contains(strings.SplitN(view, "\n", 2)[0], "48;2;40;42;54"); got != test.want {
+				t.Fatalf("pane border paints configured background = %t, want %t: %q", got, test.want, view)
 			}
 		})
 	}
 }
 
-func TestPopupDoesNotPaintThemeBackground(t *testing.T) {
+func TestPaneRestoresConfiguredBackgroundAfterNestedStyleReset(t *testing.T) {
+	model := testModel(t)
+	model.theme = builtinTheme(t, "colorblind-light")
+	marker := lipgloss.NewStyle().Foreground(lipgloss.Color(model.theme.Palette.Directory)).Render("• ")
+	view := model.pane([]string{marker + "note"}, 20, 4, false, false)
+	background := "\x1b[48;2;243;243;243m"
+	if strings.Contains(view, "\x1b[mnote") || !strings.Contains(view, "\x1b[m"+background+"note") {
+		t.Fatalf("pane does not restore background after nested reset: %q", view)
+	}
+}
+
+func TestPopupsPaintConfiguredThemeBackground(t *testing.T) {
 	model := testModel(t)
 	model.theme.Palette.Background = "#282A36"
 	model.openThemePicker()
-	view := model.themePickerPopup(40, 8)
-	if strings.Contains(view, "\x1b[48;2;40;42;54m") {
-		t.Fatalf("popup paints a background: %q", view)
+	model.help = true
+	for name, view := range map[string]string{
+		"picker": model.themePickerPopup(40, 8),
+		"popup":  model.popupContent(40, 8),
+	} {
+		if !strings.Contains(view, "\x1b[48;2;40;42;54m") {
+			t.Errorf("%s does not paint configured background: %q", name, view)
+		}
+		if !strings.Contains(strings.SplitN(view, "\n", 2)[0], "48;2;40;42;54") {
+			t.Errorf("%s border does not paint configured background: %q", name, view)
+		}
 	}
 }
 
@@ -359,7 +382,7 @@ func TestResponsiveThemeGoldens(t *testing.T) {
 	}{
 		{name: "jotmd"},
 		{name: "nord"},
-		{name: "solarized-light"},
+		{name: "catppuccin-latte"},
 		{name: "jotmd", noColor: true},
 	}
 	sizes := []struct {

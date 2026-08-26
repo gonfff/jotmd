@@ -1,4 +1,5 @@
-# Catppuccin Mocha theme
+# Adapted from revdiff's Catppuccin Mocha theme.
+# Original author: umputun. See ../REVDIFF-LICENSE.
 name = "catppuccin-mocha"
 syntax_style = "catppuccin-mocha"
 
@@ -11,8 +12,8 @@ border_focus = "#89B4FA"
 selection_background = "#89B4FA"
 selection_foreground = "#1E1E2E"
 accent = "#89B4FA"
-directory = "#A6E3A1"
+directory = "#89B4FA"
 heading = "#F9E2AF"
-link = "#89B4FA"
+link = "#A6E3A1"
 code = "#A6E3A1"
 status = "#89B4FA"

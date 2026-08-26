@@ -1,4 +1,5 @@
-# Solarized dark theme
+# Adapted from revdiff's Solarized Dark theme.
+# Original author: umputun. See ../REVDIFF-LICENSE.
 name = "solarized-dark"
 syntax_style = "solarized-dark"
 
@@ -6,13 +7,13 @@ syntax_style = "solarized-dark"
 background = "#002B36"
 foreground = "#839496"
 muted = "#586E75"
-border = "#073642"
+border = "#586E75"
 border_focus = "#B58900"
 selection_background = "#B58900"
 selection_foreground = "#002B36"
 accent = "#B58900"
-directory = "#2AA198"
+directory = "#B58900"
 heading = "#CB4B16"
-link = "#268BD2"
-code = "#859900"
+link = "#859900"
+code = "#719E07"
 status = "#B58900"

@@ -96,12 +96,14 @@ func (m Model) popupContent(width, height int) string {
 	style := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(m.theme.Palette.BorderFocus)).
+		BorderBackground(lipgloss.Color(m.theme.Palette.Background)).
+		Background(lipgloss.Color(m.theme.Palette.Background)).
 		MaxWidth(width + 2).
 		MaxHeight(height + 2)
 	if large {
 		style = style.Width(width + 2).Height(height + 2)
 	}
-	return style.Render(content)
+	return style.Render(restoreBackground(content, m.theme.Palette.Background))
 }
 
 func overlay(base, popup string, width, height int) string {
@@ -193,9 +195,11 @@ func (m Model) pickerPopup(width, height, rows int, view func(int, int) string) 
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(m.theme.Palette.BorderFocus)).
+		BorderBackground(lipgloss.Color(m.theme.Palette.Background)).
+		Background(lipgloss.Color(m.theme.Palette.Background)).
 		Width(outerWidth).
 		Height(outerHeight).
-		Render(view(max(1, outerWidth-2), max(1, outerHeight-2)))
+		Render(restoreBackground(view(max(1, outerWidth-2), max(1, outerHeight-2)), m.theme.Palette.Background))
 }
 
 func (m Model) pane(lines []string, width, height int, focused, padded bool) string {
@@ -208,12 +212,26 @@ func (m Model) pane(lines []string, width, height int, focused, padded bool) str
 	style := lipgloss.NewStyle().
 		Border(border).
 		BorderForeground(lipgloss.Color(color)).
+		BorderBackground(lipgloss.Color(m.theme.Palette.Background)).
+		Background(lipgloss.Color(m.theme.Palette.Background)).
 		Width(max(1, width)).
 		Height(max(1, height))
 	if padded {
 		style = style.Padding(1)
 	}
-	return style.Render(strings.Join(lines, "\n"))
+	return style.Render(restoreBackground(strings.Join(lines, "\n"), m.theme.Palette.Background))
+}
+
+func restoreBackground(value, background string) string {
+	if background == "" {
+		return value
+	}
+	prefix, _, found := strings.Cut(lipgloss.NewStyle().Background(lipgloss.Color(background)).Render(" "), " ")
+	if !found || prefix == "" {
+		return value
+	}
+	value = strings.ReplaceAll(value, "\x1b[0m", "\x1b[0m"+prefix)
+	return strings.ReplaceAll(value, "\x1b[m", "\x1b[m"+prefix)
 }
 
 func (m Model) treeView(width, height int) []string {

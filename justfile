@@ -33,6 +33,9 @@ release-snapshot:
     set -eu
     goreleaser release --snapshot --clean
     test "$(find dist -maxdepth 1 -type f -name 'jotmd_*_*.tar.gz' | wc -l | tr -d ' ')" -eq 2
+    for archive in dist/jotmd_*_*.tar.gz; do
+        tar -tzf "$archive" REVDIFF-LICENSE >/dev/null
+    done
     test -f dist/checksums.txt
     test -f dist/homebrew/Formula/jotmd.rb
     (

@@ -1,4 +1,5 @@
-# Dracula theme
+# Adapted from revdiff's Dracula theme.
+# Original author: umputun. See ../REVDIFF-LICENSE.
 name = "dracula"
 syntax_style = "dracula"
 
@@ -6,13 +7,13 @@ syntax_style = "dracula"
 background = "#282A36"
 foreground = "#F8F8F2"
 muted = "#6272A4"
-border = "#44475A"
+border = "#6272A4"
 border_focus = "#BD93F9"
 selection_background = "#BD93F9"
 selection_foreground = "#282A36"
 accent = "#BD93F9"
-directory = "#8BE9FD"
+directory = "#BD93F9"
 heading = "#F1FA8C"
-link = "#8BE9FD"
+link = "#50FA7B"
 code = "#50FA7B"
 status = "#BD93F9"

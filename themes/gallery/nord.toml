@@ -1,18 +1,19 @@
-# Nord theme
+# Adapted from revdiff's Nord theme.
+# Original author: umputun. See ../REVDIFF-LICENSE.
 name = "nord"
 syntax_style = "nord"
 
 [palette]
 background = "#2E3440"
 foreground = "#D8DEE9"
-muted = "#7B88A1"
+muted = "#4C566A"
 border = "#4C566A"
 border_focus = "#88C0D0"
 selection_background = "#88C0D0"
 selection_foreground = "#2E3440"
 accent = "#88C0D0"
-directory = "#81A1C1"
+directory = "#88C0D0"
 heading = "#EBCB8B"
-link = "#88C0D0"
-code = "#A3BE8C"
+link = "#A3BE8C"
+code = "#B4D09A"
 status = "#88C0D0"

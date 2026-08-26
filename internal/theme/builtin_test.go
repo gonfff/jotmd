@@ -12,19 +12,17 @@ import (
 
 func TestBuiltinThemesAreCompleteAndSorted(t *testing.T) {
 	wantNames := []string{
-		"blue-pencil",
+		"basic",
+		"catppuccin-latte",
 		"catppuccin-mocha",
+		"colorblind-dark",
+		"colorblind-light",
 		"dracula",
-		"ember-ink",
-		"field-notes",
-		"gruvbox-dark",
-		"highlighter",
+		"gruvbox",
 		"jotmd",
-		"monokai",
 		"nord",
+		"revdiff",
 		"solarized-dark",
-		"solarized-light",
-		"tokyo-night",
 	}
 	if got := Names(); !slices.Equal(got, wantNames) {
 		t.Fatalf("Names() = %q, want %q", got, wantNames)
@@ -64,10 +62,10 @@ func TestBuiltinThemesAreCompleteAndSorted(t *testing.T) {
 
 func TestBuiltinSyntaxStylesFollowTheme(t *testing.T) {
 	want := map[string]string{
-		"jotmd": "rose-pine", "catppuccin-mocha": "catppuccin-mocha",
-		"field-notes": "rose-pine", "blue-pencil": "github-dark", "highlighter": "gruvbox", "ember-ink": "rose-pine-moon",
-		"dracula": "dracula", "nord": "nord", "gruvbox-dark": "gruvbox", "tokyo-night": "tokyonight-night",
-		"solarized-dark": "solarized-dark", "solarized-light": "solarized-light", "monokai": "monokai",
+		"basic": "github-dark", "catppuccin-latte": "catppuccin-latte", "catppuccin-mocha": "catppuccin-mocha",
+		"colorblind-dark": "modus-vivendi", "colorblind-light": "modus-operandi", "dracula": "dracula",
+		"gruvbox": "gruvbox", "jotmd": "rose-pine", "nord": "nord",
+		"revdiff": "catppuccin-macchiato", "solarized-dark": "solarized-dark",
 	}
 	for name, style := range want {
 		th, err := Builtin(name)
