@@ -15,7 +15,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/sahilm/fuzzy v0.1.3
 	github.com/yuin/goldmark v1.7.17
-	golang.org/x/sys v0.46.0
+	golang.org/x/sys v0.47.0
 )
 
 require (
