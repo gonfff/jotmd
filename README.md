@@ -63,6 +63,57 @@ jotmd --notes-dir ./notes write projects/foo/pitfalls.md \
 `delete` applies the same revision check and permanently removes one note. It
 cannot be undone. With `--json`, successes use stdout and errors use stderr.
 
+## Agent memory
+
+> [!WARNING]
+> `agent-memory/` is a reserved top-level vault directory. Before enabling this
+> integration, move any existing user content out of that directory or explicitly
+> adopt it as agent-managed memory; JotMD hides it by default and agents may recall
+> it automatically. Case variants such as `Agent-Memory` are rejected.
+
+The optional `jot-memory` skill lets supported coding agents recall useful
+knowledge before substantial work and capture durable findings afterward. Install
+`jotmd` first and keep it on `PATH`. Invocation is automatic but best-effort: the
+model decides whether the current work needs recall or produced knowledge worth
+saving.
+
+Memory remains ordinary, editable Markdown in the configured vault:
+
+```text
+agent-memory/
+├── global/
+└── projects/<project-id>/
+```
+
+Automatic note access is limited to `agent-memory/`; notes elsewhere remain user
+notes unless the user explicitly requests access. This boundary does not sandbox
+an agent that already has unrestricted host filesystem access. Agent-created
+notes show their manager, scope, dates, project when applicable, and reliability.
+After capture, the agent reports every changed note path.
+
+The TUI hides `agent-memory/` by default. Press `a` to show or hide it, or set
+`show_agent_memory = true` in `config.toml` to show it at startup.
+
+Installation is opt-in for each host:
+
+```sh
+# Claude Code
+claude plugin marketplace add gonfff/jot
+claude plugin install jot-memory@jotmd
+
+# Codex local/repository testing
+codex plugin marketplace add gonfff/jot
+codex plugin add jot-memory@jotmd
+
+# OpenCode global skill, after cloning/downloading this repository
+mkdir -p ~/.config/opencode/skills
+cp -R skills/jot-memory ~/.config/opencode/skills/
+```
+
+After publication, Codex users can install `jot-memory` from the Plugins
+Directory. OpenCode needs no TypeScript plugin or manifest; it discovers the
+canonical skill at `~/.config/opencode/skills/jot-memory/SKILL.md`.
+
 ## What it does
 
 - Browses directories and `.md` files with a live, wrapping Markdown preview.
@@ -82,6 +133,7 @@ cannot be undone. With `--json`, successes use stdout and errors use stderr.
 | `n` / `N` | Create a note / directory |
 | `/` | Search |
 | `t` | Select a theme |
+| `a` | Show/hide agent memory |
 | `:` | Open the command palette |
 | `?` | Show all key bindings |
 | `q` | Quit |
@@ -108,6 +160,9 @@ Optional configuration commands:
 
 Useful overrides include `--notes-dir`, `--theme`, and `--editor`; run
 `jotmd --help` for the complete CLI.
+
+Set `show_agent_memory = true` in `config.toml` to include agent memory in the
+tree and searches when JotMD starts. The default is `false`.
 
 ## Development
 

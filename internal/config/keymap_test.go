@@ -62,20 +62,21 @@ func TestInitKeymapTemplateLoadsEveryWorkflowBinding(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := map[string]string{
-		"tree.open":     "enter,space",
-		"note.edit":     "e",
-		"note.new":      "n",
-		"directory.new": "N",
-		"note.rename":   "r",
-		"note.copy":     "c",
-		"note.move":     "m",
-		"note.trash":    "d",
-		"note.delete":   "D",
-		"search.open":   "/",
-		"app.palette":   ":",
-		"preview.raw":   "v",
-		"preview.wrap":  "w",
-		"preview.style": "s",
+		"tree.open":         "enter,space",
+		"note.edit":         "e",
+		"note.new":          "n",
+		"directory.new":     "N",
+		"note.rename":       "r",
+		"note.copy":         "c",
+		"note.move":         "m",
+		"note.trash":        "d",
+		"note.delete":       "D",
+		"search.open":       "/",
+		"app.palette":       ":",
+		"preview.raw":       "v",
+		"preview.wrap":      "w",
+		"preview.style":     "s",
+		"view.agent_memory": "a",
 	}
 	registry := ui.ActionRegistry()
 	for index := range registry {
@@ -114,6 +115,24 @@ func TestLoadKeymapRejectsDuplicateContextualKeys(t *testing.T) {
 	_, err := config.LoadKeymap(path, actions)
 	if err == nil || !strings.Contains(err.Error(), "tree") || !strings.Contains(err.Error(), "j") {
 		t.Fatalf("LoadKeymap() error = %v, want duplicate tree key", err)
+	}
+}
+
+func TestLoadKeymapExplicitBindingWinsOverConflictingDefault(t *testing.T) {
+	configured := []config.Action{
+		{Name: "tree.down", Keys: []string{"j"}, Contexts: []string{"tree"}},
+		{Name: "view.agent_memory", Keys: []string{"a"}, Contexts: []string{"tree", "preview"}},
+	}
+	path := writeFile(t, filepath.Join(t.TempDir(), "keybindings.toml"), "[bindings]\n\"tree.down\" = [\"a\"]\n")
+	keymap, err := config.LoadKeymap(path, configured)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := keymap.Bindings[0]; got.Action != "tree.down" || strings.Join(got.Keys, ",") != "a" {
+		t.Fatalf("explicit binding = %#v, want tree.down = a", got)
+	}
+	if got := keymap.Bindings[1]; got.Action != "view.agent_memory" || len(got.Keys) != 0 {
+		t.Fatalf("conflicting new default = %#v, want disabled", got)
 	}
 }
 

@@ -242,7 +242,7 @@ func runSearch(ctx context.Context, store *notes.Store, invocation agentInvocati
 		return err
 	}
 	matches := notes.RankPaths(snapshot, query, invocation.limit)
-	contentMatches, stats, err := store.SearchContent(ctx, query, 8<<20, invocation.limit-len(matches))
+	contentMatches, stats, err := store.SearchContentSnapshot(ctx, snapshot, query, 8<<20, invocation.limit-len(matches))
 	if err != nil {
 		return err
 	}

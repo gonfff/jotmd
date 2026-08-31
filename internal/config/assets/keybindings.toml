@@ -26,6 +26,7 @@
 "preview.raw" = ["v"]
 "preview.wrap" = ["w"]
 "preview.style" = ["s"]
+"view.agent_memory" = ["a"]
 "app.quit" = ["q"]
 "help.close" = ["esc"]
 "theme.up" = ["up", "ctrl+p"]

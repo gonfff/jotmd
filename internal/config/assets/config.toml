@@ -22,6 +22,9 @@
 # Include dotfiles and hidden directories.
 # show_hidden = false
 
+# Include agent-memory notes in the tree and search.
+# show_agent_memory = false
+
 # File or directory names excluded from the notes tree and search.
 # ignore = [".obsidian", ".git"]
 

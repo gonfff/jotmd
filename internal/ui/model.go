@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"charm.land/bubbles/v2/textinput"
@@ -36,6 +37,7 @@ type Model struct {
 	preview           Preview
 	document          notes.Document
 	directoryExcerpts map[notes.RelPath]string
+	snapshot          notes.Snapshot
 	ctx               context.Context
 	cancel            context.CancelFunc
 	scanCtx           context.Context
@@ -46,21 +48,41 @@ type Model struct {
 	watchGeneration                uint64
 	configReloadGeneration         uint64
 
-	width, height int
-	focus         Context
-	status        string
-	editorWarning string
-	watchWarning  string
-	configWarning string
-	previewRatio  float64
-	scanned       bool
-	loading       bool
-	help          bool
-	helpOffset    int
-	hasDocument   bool
-	fullPreview   bool
-	restoreRatio  bool
-	forceRead     bool
+	width, height   int
+	focus           Context
+	status          string
+	editorWarning   string
+	watchWarning    string
+	configWarning   string
+	previewRatio    float64
+	scanned         bool
+	loading         bool
+	help            bool
+	helpOffset      int
+	hasDocument     bool
+	fullPreview     bool
+	restoreRatio    bool
+	forceRead       bool
+	showAgentMemory bool
+}
+
+const agentMemoryRoot notes.RelPath = "agent-memory"
+
+func isAgentMemoryPath(path notes.RelPath) bool {
+	return path == agentMemoryRoot || strings.HasPrefix(string(path), string(agentMemoryRoot)+"/")
+}
+
+func visibleSnapshot(snapshot notes.Snapshot, showAgentMemory bool) notes.Snapshot {
+	if showAgentMemory {
+		return snapshot
+	}
+	visible := notes.Snapshot{Root: snapshot.Root, Entries: make([]notes.Entry, 0, len(snapshot.Entries))}
+	for _, entry := range snapshot.Entries {
+		if !isAgentMemoryPath(entry.Path) {
+			visible.Entries = append(visible.Entries, entry)
+		}
+	}
+	return visible
 }
 
 func (m *Model) SetEditor(command editor.Command) {
@@ -135,7 +157,7 @@ func NewModelWithOptions(store *notes.Store, cfg config.Config, th theme.Theme, 
 	preview.SetRenderStyle(cfg.Preview.RenderStyle)
 	ctx, cancel := context.WithCancel(context.Background())
 	catalog := pickerThemes(th, themes, false)
-	model := Model{store: store, cfg: cfg, theme: th, themes: pickerThemes(th, catalog, cfg.NoColor), themeCatalog: catalog, bindings: BindingsForKeymap(keymap), preview: preview, focus: ContextTree, ctx: ctx, cancel: cancel}
+	model := Model{store: store, cfg: cfg, theme: th, themes: pickerThemes(th, catalog, cfg.NoColor), themeCatalog: catalog, bindings: BindingsForKeymap(keymap), preview: preview, focus: ContextTree, ctx: ctx, cancel: cancel, showAgentMemory: cfg.ShowAgentMemory}
 	model.startScan()
 	return model
 }

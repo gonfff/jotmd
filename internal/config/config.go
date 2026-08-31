@@ -24,6 +24,7 @@ type Config struct {
 	TreeWidth        int
 	NoColor          bool
 	ShowHidden       bool
+	ShowAgentMemory  bool
 	Ignore           []string
 	Sort             string
 	DirectoriesFirst bool
@@ -40,6 +41,7 @@ type Partial struct {
 	TreeWidth        *int               `toml:"tree_width"`
 	NoColor          *bool              `toml:"no_color"`
 	ShowHidden       *bool              `toml:"show_hidden"`
+	ShowAgentMemory  *bool              `toml:"show_agent_memory"`
 	Ignore           *[]string          `toml:"ignore"`
 	Sort             *string            `toml:"sort"`
 	DirectoriesFirst *bool              `toml:"directories_first"`
@@ -63,6 +65,7 @@ func Defaults() Config {
 		TreeWidth:        20,
 		NoColor:          false,
 		ShowHidden:       false,
+		ShowAgentMemory:  false,
 		Ignore:           []string{".obsidian", ".git"},
 		Sort:             "name",
 		DirectoriesFirst: true,
@@ -185,6 +188,9 @@ func Merge(base Config, overlay Partial) Config {
 	}
 	if overlay.ShowHidden != nil {
 		base.ShowHidden = *overlay.ShowHidden
+	}
+	if overlay.ShowAgentMemory != nil {
+		base.ShowAgentMemory = *overlay.ShowAgentMemory
 	}
 	if overlay.Ignore != nil {
 		base.Ignore = append([]string(nil), (*overlay.Ignore)...)

@@ -43,6 +43,33 @@ func TestDefaultsUsesNotesDefaultReadMaxBytes(t *testing.T) {
 	}
 }
 
+func TestShowAgentMemoryDefaultsLoadsMergesAndDumps(t *testing.T) {
+	if config.Defaults().ShowAgentMemory {
+		t.Fatal("Defaults() ShowAgentMemory = true, want false")
+	}
+	path := writeFile(t, filepath.Join(t.TempDir(), "config.toml"), "show_agent_memory = true\n")
+	got, err := config.Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.ShowAgentMemory {
+		t.Fatal("Load() ShowAgentMemory = false, want true")
+	}
+	disabled := false
+	got = config.Merge(got, config.Partial{ShowAgentMemory: &disabled})
+	if got.ShowAgentMemory {
+		t.Fatal("Merge() ShowAgentMemory = true, want false")
+	}
+	got.ShowAgentMemory = true
+	var output bytes.Buffer
+	if err := config.Dump(&output, got); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output.String(), "show_agent_memory = true") {
+		t.Fatalf("Dump() = %q, want show_agent_memory", output.String())
+	}
+}
+
 func TestTreeWidthLoadsValidatesAndDumps(t *testing.T) {
 	path := writeFile(t, filepath.Join(t.TempDir(), "config.toml"), "tree_width = 45\n")
 	got, err := config.Load(path)
@@ -648,7 +675,7 @@ func lookup(values map[string]string) func(string) (string, bool) {
 }
 
 func equalConfig(got, want config.Config) bool {
-	if got.NotesDir != want.NotesDir || got.Theme != want.Theme || got.TreeWidth != want.TreeWidth || got.NoColor != want.NoColor || got.ShowHidden != want.ShowHidden || got.Sort != want.Sort || got.DirectoriesFirst != want.DirectoriesFirst || got.StatusBar != want.StatusBar || got.Watch != want.Watch || got.Preview != want.Preview {
+	if got.NotesDir != want.NotesDir || got.Theme != want.Theme || got.TreeWidth != want.TreeWidth || got.NoColor != want.NoColor || got.ShowHidden != want.ShowHidden || got.ShowAgentMemory != want.ShowAgentMemory || got.Sort != want.Sort || got.DirectoriesFirst != want.DirectoriesFirst || got.StatusBar != want.StatusBar || got.Watch != want.Watch || got.Preview != want.Preview {
 		return false
 	}
 	return strings.Join(got.Ignore, "\x00") == strings.Join(want.Ignore, "\x00") && strings.Join(got.Editor, "\x00") == strings.Join(want.Editor, "\x00")

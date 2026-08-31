@@ -1,0 +1,13 @@
+{
+  "name": "jotmd",
+  "owner": {
+    "name": "gonfff"
+  },
+  "plugins": [
+    {
+      "name": "jot-memory",
+      "source": "./",
+      "description": "Recall and maintain durable project and global knowledge in JotMD."
+    }
+  ]
+}

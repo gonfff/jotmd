@@ -226,6 +226,7 @@ func TestRunInitConfigCreatesTemplatesBeforeStartingTUI(t *testing.T) {
 		"# tree_width = 20",
 		"# no_color = false",
 		"# show_hidden = false",
+		"# show_agent_memory = false",
 		"# ignore = [\".obsidian\", \".git\"]",
 		"# sort = \"name\"",
 		"# directories_first = true",
@@ -238,6 +239,13 @@ func TestRunInitConfigCreatesTemplatesBeforeStartingTUI(t *testing.T) {
 		if !strings.Contains(string(contents), want) {
 			t.Errorf("config template lacks %q:\n%s", want, contents)
 		}
+	}
+	keybindings, err := os.ReadFile(filepath.Join(home, ".config", "jotmd", "keybindings.toml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(keybindings), `"view.agent_memory" = ["a"]`) {
+		t.Errorf("keymap template lacks agent memory binding:\n%s", keybindings)
 	}
 }
 

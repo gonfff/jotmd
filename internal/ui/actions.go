@@ -30,6 +30,7 @@ const (
 	ActionPreviewRaw   Action = "preview-raw"
 	ActionPreviewWrap  Action = "preview-wrap"
 	ActionPreviewStyle Action = "preview-style"
+	ActionAgentMemory  Action = "agent-memory"
 	ActionQuit         Action = "quit"
 	ActionClose        Action = "close"
 )

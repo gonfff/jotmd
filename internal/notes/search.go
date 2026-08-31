@@ -72,6 +72,17 @@ func (s *Store) SearchContent(ctx context.Context, query string, maxFileBytes in
 	if err != nil {
 		return nil, SearchStats{}, err
 	}
+	return s.SearchContentSnapshot(ctx, snapshot, query, maxFileBytes, limit)
+}
+
+func (s *Store) SearchContentSnapshot(ctx context.Context, snapshot Snapshot, query string, maxFileBytes int64, limit int) ([]Match, SearchStats, error) {
+	limit = searchLimit(limit)
+	if err := ctx.Err(); err != nil {
+		return nil, SearchStats{}, err
+	}
+	if query == "" || limit == 0 {
+		return nil, SearchStats{}, nil
+	}
 	normalized := caseFoldKey(query)
 	matches := make([]Match, 0, min(limit+1, 16))
 	stats := SearchStats{}

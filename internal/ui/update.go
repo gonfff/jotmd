@@ -25,6 +25,8 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.status = fmt.Sprintf("scan: %v", message.err)
 			return m, nil
 		}
+		m.snapshot = message.snapshot
+		snapshot := visibleSnapshot(message.snapshot, m.showAgentMemory)
 		selectedBefore, hadSelection := m.tree.Selected()
 		wasScanned := m.scanned
 		forceRead := m.forceRead
@@ -32,9 +34,9 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		preserveRatio := m.hasDocument && hadSelection && selectedBefore.Path == m.document.Path
 		previousRatio := m.preview.viewport.ScrollPercent()
 		if m.scanned {
-			m.tree = m.tree.Reconcile(message.snapshot)
+			m.tree = m.tree.Reconcile(snapshot)
 		} else {
-			m.tree = NewTree(message.snapshot).SetViewport(m.tree.height)
+			m.tree = NewTree(snapshot).SetViewport(m.tree.height)
 			m.scanned = true
 		}
 		if m.pendingSelect != "" {
@@ -163,12 +165,14 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.setConfigWarning(fmt.Sprintf("config reload: %v", message.err))
 		}
 		watchChanged := m.cfg.Watch != message.resolved.Watch
+		agentMemoryChanged := m.cfg.ShowAgentMemory != message.resolved.ShowAgentMemory
 		m.cfg.Theme = message.resolved.Theme
 		m.cfg.ThemeColors = message.resolved.ThemeColors
 		m.cfg.TreeWidth = message.resolved.TreeWidth
 		m.cfg.NoColor = message.resolved.NoColor
 		m.cfg.StatusBar = message.resolved.StatusBar
 		m.cfg.Watch = message.resolved.Watch
+		m.cfg.ShowAgentMemory = message.resolved.ShowAgentMemory
 		m.cfg.Preview.Wrap = message.resolved.Preview.Wrap
 		m.cfg.Preview.RenderStyle = message.resolved.Preview.RenderStyle
 		m.theme = message.resolved.theme
@@ -194,7 +198,11 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if watchChanged && m.cfg.Watch {
 			scan = m.startScan()
 		}
-		return m, tea.Batch(scan, m.renderDocument())
+		var visibility tea.Cmd
+		if agentMemoryChanged {
+			visibility = m.setAgentMemoryVisible(m.cfg.ShowAgentMemory)
+		}
+		return m, tea.Batch(scan, visibility, m.renderDocument())
 	case searchReady:
 		if m.mode != SearchPrompt || message.generation != m.search.generation || message.query != m.input.Value() {
 			return m, nil
@@ -521,6 +529,8 @@ func (m Model) dispatchAction(action Action) (tea.Model, tea.Cmd) {
 		return m, m.renderDocument()
 	case ActionPreviewStyle:
 		m.openRenderStylePicker()
+	case ActionAgentMemory:
+		return m, m.setAgentMemoryVisible(!m.showAgentMemory)
 	case ActionEdit:
 		return m, m.editSelected()
 	case ActionNewNote, ActionNewDirectory, ActionRename, ActionCopy, ActionMove, ActionTrash, ActionDelete:
@@ -603,6 +613,24 @@ func (m *Model) setFullPreview(full bool) tea.Cmd {
 		m.restoreRatio = true
 	}
 	return command
+}
+
+func (m *Model) setAgentMemoryVisible(visible bool) tea.Cmd {
+	if m.mode == SearchPrompt {
+		m.closeSearch()
+	}
+	selected, hadSelection := m.tree.Selected()
+	m.showAgentMemory = visible
+	m.tree = m.tree.Reconcile(visibleSnapshot(m.snapshot, visible))
+	if hadSelection && isAgentMemoryPath(selected.Path) && !visible {
+		m.clearDocument()
+	}
+	if visible {
+		m.status = "agent memory visible"
+	} else {
+		m.status = "agent memory hidden"
+	}
+	return m.readSelected()
 }
 
 func (m *Model) readSelected() tea.Cmd {

@@ -46,7 +46,7 @@ func (m *Model) openSearch() {
 	m.input = textinput.New()
 	m.input.Prompt = "/ "
 	m.input.Focus()
-	m.search = searchState{}
+	m.search = searchState{generation: m.search.generation}
 }
 
 func (m *Model) closeSearch() {
@@ -114,7 +114,7 @@ func (m *Model) refreshSearch() tea.Cmd {
 
 func (m Model) searchContentCommand(ctx context.Context, generation uint64, query string, limit int) tea.Cmd {
 	return func() tea.Msg {
-		matches, _, err := m.store.SearchContent(ctx, query, searchMaxFileBytes, limit)
+		matches, _, err := m.store.SearchContentSnapshot(ctx, m.tree.snapshot, query, searchMaxFileBytes, limit)
 		return searchContentResult{generation: generation, matches: matches, err: err}
 	}
 }

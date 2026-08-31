@@ -1,0 +1,18 @@
+{
+  "name": "jot-memory",
+  "version": "0.1.0",
+  "description": "Recall and maintain durable project and global knowledge in JotMD.",
+  "skills": "./skills/",
+  "author": {
+    "name": "gonfff"
+  },
+  "interface": {
+    "displayName": "JotMD Memory",
+    "shortDescription": "Durable Markdown memory for coding agents.",
+    "longDescription": "Recall and maintain durable project and global knowledge in a JotMD vault.",
+    "developerName": "gonfff",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": ["Recall relevant knowledge before starting this task."]
+  }
+}

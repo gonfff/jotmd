@@ -59,6 +59,7 @@ type dumpConfig struct {
 	TreeWidth        int               `toml:"tree_width"`
 	NoColor          bool              `toml:"no_color"`
 	ShowHidden       bool              `toml:"show_hidden"`
+	ShowAgentMemory  bool              `toml:"show_agent_memory"`
 	Ignore           []string          `toml:"ignore"`
 	Sort             string            `toml:"sort"`
 	DirectoriesFirst bool              `toml:"directories_first"`
@@ -76,6 +77,7 @@ func Dump(w io.Writer, cfg Config) error {
 		TreeWidth:        cfg.TreeWidth,
 		NoColor:          cfg.NoColor,
 		ShowHidden:       cfg.ShowHidden,
+		ShowAgentMemory:  cfg.ShowAgentMemory,
 		Ignore:           cfg.Ignore,
 		Sort:             cfg.Sort,
 		DirectoriesFirst: cfg.DirectoriesFirst,

@@ -81,6 +81,36 @@ func TestSearchContentUsesScannedMarkdownAndReportsLines(t *testing.T) {
 	}
 }
 
+func TestSearchContentSnapshotOnlyReadsProvidedEntries(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root, nil, []treeFile{
+		{path: "agent-memory/global/topic.md", content: "needle", mode: 0o600},
+		{path: "user.md", content: "needle", mode: 0o600},
+	})
+	store, err := NewStore(root, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := store.Scan(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	visible := Snapshot{Root: snapshot.Root}
+	for _, entry := range snapshot.Entries {
+		if entry.Path == "user.md" {
+			visible.Entries = append(visible.Entries, entry)
+		}
+	}
+
+	matches, stats, err := store.SearchContentSnapshot(context.Background(), visible, "needle", 1024, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := matchPaths(matches); fmt.Sprint(got) != "[user.md]" || stats.FilesScanned != 1 {
+		t.Fatalf("SearchContentSnapshot() = %v, %#v, want user.md only", got, stats)
+	}
+}
+
 func TestSearchContentUsesUnicodeCaseFoldingAndPreservesSnippet(t *testing.T) {
 	root := t.TempDir()
 	writeTree(t, root, nil, []treeFile{{path: "unicode.md", content: "ΣΑ\nKelvin", mode: 0o600}})

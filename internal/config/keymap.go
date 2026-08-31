@@ -84,10 +84,40 @@ func LoadKeymap(path string, actions []Action) (Keymap, error) {
 		}
 	}
 
+	explicit := make(map[string]struct{})
+	for _, original := range actions {
+		if _, ok := overrides.Bindings[original.Name]; !ok {
+			continue
+		}
+		action := defaults[original.Name]
+		for _, context := range action.Contexts {
+			for _, key := range action.Keys {
+				explicit[context+"\x00"+key] = struct{}{}
+			}
+		}
+	}
+
 	keymap := Keymap{Bindings: make([]Binding, 0, len(actions))}
 	seen := make(map[string]string)
 	for _, original := range actions {
 		action := defaults[original.Name]
+		// This default was introduced after user keymaps existed, so legacy explicit keys win.
+		if _, overridden := overrides.Bindings[action.Name]; action.Name == "view.agent_memory" && !overridden {
+			keys := make([]string, 0, len(action.Keys))
+			for _, key := range action.Keys {
+				conflict := false
+				for _, context := range action.Contexts {
+					if _, ok := explicit[context+"\x00"+key]; ok {
+						conflict = true
+						break
+					}
+				}
+				if !conflict {
+					keys = append(keys, key)
+				}
+			}
+			action.Keys = keys
+		}
 		for _, context := range action.Contexts {
 			for _, key := range action.Keys {
 				if prior, ok := seen[context+"\x00"+key]; ok {

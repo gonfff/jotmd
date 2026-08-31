@@ -39,6 +39,7 @@ func DefaultBindings() []Binding {
 		{Name: "preview.raw", Action: ActionPreviewRaw, Keys: []string{"v"}, Label: "raw", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
 		{Name: "preview.wrap", Action: ActionPreviewWrap, Keys: []string{"w"}, Label: "wrap", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
 		{Name: "preview.style", Action: ActionPreviewStyle, Keys: []string{"s"}, Label: "render style", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
+		{Name: "view.agent_memory", Action: ActionAgentMemory, Keys: []string{"a"}, Label: "agent memory", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
 		{Name: "app.quit", Action: ActionQuit, Keys: []string{"q"}, Label: "quit", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
 		{Name: "help.close", Action: ActionClose, Keys: []string{"esc"}, Label: "close", Contexts: []Context{ContextHelp}},
 		{Name: "theme.up", Action: ActionThemeUp, Keys: []string{"up", "ctrl+p"}, Label: "up", Contexts: []Context{ContextTheme}},
