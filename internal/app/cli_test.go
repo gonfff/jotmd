@@ -13,7 +13,7 @@ import (
 	"github.com/gonfff/jotmd/internal/notes"
 )
 
-func TestParseAgentInvocationAcceptsFlagsAroundOperands(t *testing.T) {
+func TestParseCLIInvocationAcceptsFlagsAroundOperands(t *testing.T) {
 	tests := []struct {
 		args       []string
 		command    string
@@ -30,9 +30,9 @@ func TestParseAgentInvocationAcceptsFlagsAroundOperands(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got, handled, err := parseAgentInvocation(tt.args)
+		got, handled, err := parseCLIInvocation(tt.args)
 		if err != nil || !handled {
-			t.Fatalf("parseAgentInvocation(%q) = (%#v, %v, %v)", tt.args, got, handled, err)
+			t.Fatalf("parseCLIInvocation(%q) = (%#v, %v, %v)", tt.args, got, handled, err)
 		}
 		gotNotesDir, gotRevision := "", ""
 		if got.notesDir != nil {
@@ -44,12 +44,12 @@ func TestParseAgentInvocationAcceptsFlagsAroundOperands(t *testing.T) {
 		if got.command != tt.command || !slices.Equal(got.operands, tt.operands) ||
 			gotNotesDir != tt.notesDir || got.jsonOutput != tt.jsonOutput ||
 			got.limit != tt.limit || gotRevision != tt.ifRevision {
-			t.Errorf("parseAgentInvocation(%q) = %#v", tt.args, got)
+			t.Errorf("parseCLIInvocation(%q) = %#v", tt.args, got)
 		}
 	}
 }
 
-func TestParseAgentInvocationLeavesLegacyArgumentsAlone(t *testing.T) {
+func TestParseCLIInvocationLeavesLegacyArgumentsAlone(t *testing.T) {
 	for _, args := range [][]string{
 		nil,
 		{"--help"},
@@ -59,13 +59,13 @@ func TestParseAgentInvocationLeavesLegacyArgumentsAlone(t *testing.T) {
 		{"rm", "note.md"},
 		{"trash", "note.md"},
 	} {
-		if got, handled, err := parseAgentInvocation(args); err != nil || handled {
-			t.Errorf("parseAgentInvocation(%q) = (%#v, %v, %v), want legacy", args, got, handled, err)
+		if got, handled, err := parseCLIInvocation(args); err != nil || handled {
+			t.Errorf("parseCLIInvocation(%q) = (%#v, %v, %v), want legacy", args, got, handled, err)
 		}
 	}
 }
 
-func TestParseAgentInvocationRejectsInvalidAgentArguments(t *testing.T) {
+func TestParseCLIInvocationRejectsInvalidArguments(t *testing.T) {
 	tests := []struct {
 		name string
 		args []string
@@ -84,27 +84,27 @@ func TestParseAgentInvocationRejectsInvalidAgentArguments(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, handled, err := parseAgentInvocation(tt.args)
+			_, handled, err := parseCLIInvocation(tt.args)
 			if !handled || err == nil || !strings.Contains(err.Error(), tt.want) {
-				t.Fatalf("parseAgentInvocation(%q) = (handled=%v, err=%v), want error containing %q", tt.args, handled, err, tt.want)
+				t.Fatalf("parseCLIInvocation(%q) = (handled=%v, err=%v), want error containing %q", tt.args, handled, err, tt.want)
 			}
 		})
 	}
 }
 
-func TestParseAgentInvocationDoubleDashStopsFlagParsing(t *testing.T) {
-	got, handled, err := parseAgentInvocation([]string{"search", "--", "--json"})
+func TestParseCLIInvocationDoubleDashStopsFlagParsing(t *testing.T) {
+	got, handled, err := parseCLIInvocation([]string{"search", "--", "--json"})
 	if err != nil || !handled {
-		t.Fatalf("parseAgentInvocation() = (%#v, %v, %v)", got, handled, err)
+		t.Fatalf("parseCLIInvocation() = (%#v, %v, %v)", got, handled, err)
 	}
 	if got.jsonOutput || !slices.Equal(got.operands, []string{"--json"}) {
-		t.Fatalf("parseAgentInvocation() = %#v", got)
+		t.Fatalf("parseCLIInvocation() = %#v", got)
 	}
 }
 
-func TestRunAgentSearchJSON(t *testing.T) {
+func TestRunCLISearchJSON(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "projects/foo.md", "refresh token redis pitfall\n")
+	writeCLINote(t, root, "projects/foo.md", "refresh token redis pitfall\n")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	var stdout, stderr bytes.Buffer
 
@@ -143,9 +143,9 @@ func TestRunAgentSearchJSON(t *testing.T) {
 	}
 }
 
-func TestRunAgentSearchFindsFilename(t *testing.T) {
+func TestRunCLISearchFindsFilename(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "projects/filename-target.md", "unrelated body\n")
+	writeCLINote(t, root, "projects/filename-target.md", "unrelated body\n")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	var stdout, stderr bytes.Buffer
 
@@ -171,9 +171,9 @@ func TestRunAgentSearchFindsFilename(t *testing.T) {
 	}
 }
 
-func TestRunAgentSearchReportsEmptyAndTruncatedResults(t *testing.T) {
+func TestRunCLISearchReportsEmptyAndTruncatedResults(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "note.md", "needle one\nneedle two\n")
+	writeCLINote(t, root, "note.md", "needle one\nneedle two\n")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
@@ -189,10 +189,10 @@ func TestRunAgentSearchReportsEmptyAndTruncatedResults(t *testing.T) {
 	}
 }
 
-func TestRunAgentSearchPlainOutput(t *testing.T) {
+func TestRunCLISearchPlainOutput(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "docs/a.md", "before\nauth token\nafter")
-	writeAgentNote(t, root, "docs/auth-guide.md", "unrelated body")
+	writeCLINote(t, root, "docs/a.md", "before\nauth token\nafter")
+	writeCLINote(t, root, "docs/auth-guide.md", "unrelated body")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	var stdout, stderr bytes.Buffer
 
@@ -203,9 +203,9 @@ func TestRunAgentSearchPlainOutput(t *testing.T) {
 	}
 }
 
-func TestRunAgentGetPlainAndJSON(t *testing.T) {
+func TestRunCLIGetPlainAndJSON(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "docs/a.md", "# Note\n")
+	writeCLINote(t, root, "docs/a.md", "# Note\n")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
@@ -228,9 +228,9 @@ func TestRunAgentGetPlainAndJSON(t *testing.T) {
 	}
 }
 
-func TestRunAgentGetRejectsInvalidPathsAndEncoding(t *testing.T) {
+func TestRunCLIGetRejectsInvalidPathsAndEncoding(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "invalid.md", string([]byte{'a', 0xff}))
+	writeCLINote(t, root, "invalid.md", string([]byte{'a', 0xff}))
 	if err := os.Mkdir(filepath.Join(root, "directory.md"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -253,7 +253,7 @@ func TestRunAgentGetRejectsInvalidPathsAndEncoding(t *testing.T) {
 	}
 }
 
-func TestRunAgentErrorsUseStableChannelAndFormat(t *testing.T) {
+func TestRunCLIErrorsUseStableChannelAndFormat(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	missingRoot := filepath.Join(t.TempDir(), "missing")
 
@@ -288,7 +288,7 @@ func TestRunAgentErrorsUseStableChannelAndFormat(t *testing.T) {
 	}
 }
 
-func TestRunAgentWriteCreatesNoteAndReturnsJSON(t *testing.T) {
+func TestRunCLIWriteCreatesNoteAndReturnsJSON(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	var stdout, stderr bytes.Buffer
@@ -316,9 +316,9 @@ func TestRunAgentWriteCreatesNoteAndReturnsJSON(t *testing.T) {
 	}
 }
 
-func TestRunAgentWriteUpdatesOnlyMatchingRevision(t *testing.T) {
+func TestRunCLIWriteUpdatesOnlyMatchingRevision(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "note.md", "old")
+	writeCLINote(t, root, "note.md", "old")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	var getOutput, stderr bytes.Buffer
@@ -351,9 +351,9 @@ func TestRunAgentWriteUpdatesOnlyMatchingRevision(t *testing.T) {
 	}
 }
 
-func TestRunAgentWriteRejectsUnconditionalOverwriteAndMalformedRevision(t *testing.T) {
+func TestRunCLIWriteRejectsUnconditionalOverwriteAndMalformedRevision(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "note.md", "keep")
+	writeCLINote(t, root, "note.md", "keep")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	for _, tt := range []struct {
@@ -378,7 +378,7 @@ func TestRunAgentWriteRejectsUnconditionalOverwriteAndMalformedRevision(t *testi
 	}
 }
 
-func TestRunAgentWriteAcceptsEmptyInputAndDoesNotMutateOnReadError(t *testing.T) {
+func TestRunCLIWriteAcceptsEmptyInputAndDoesNotMutateOnReadError(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	var stdout, stderr bytes.Buffer
@@ -399,7 +399,7 @@ func TestRunAgentWriteAcceptsEmptyInputAndDoesNotMutateOnReadError(t *testing.T)
 	}
 }
 
-func TestRunAgentWriteReportsOutputFailureAfterCommit(t *testing.T) {
+func TestRunCLIWriteReportsOutputFailureAfterCommit(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	var stderr bytes.Buffer
@@ -414,9 +414,9 @@ func TestRunAgentWriteReportsOutputFailureAfterCommit(t *testing.T) {
 	}
 }
 
-func TestRunAgentDeleteRejectsStaleAndInvalidRevision(t *testing.T) {
+func TestRunCLIDeleteRejectsStaleAndInvalidRevision(t *testing.T) {
 	root := t.TempDir()
-	writeAgentNote(t, root, "note.md", "current")
+	writeCLINote(t, root, "note.md", "current")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	stale := "sha256:" + strings.Repeat("0", 64)
 
@@ -442,7 +442,7 @@ func TestRunAgentDeleteRejectsStaleAndInvalidRevision(t *testing.T) {
 	}
 }
 
-func TestRunAgentDeleteValidatesPathBeforeDeletion(t *testing.T) {
+func TestRunCLIDeleteValidatesPathBeforeDeletion(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	revision := "sha256:" + strings.Repeat("0", 64)
@@ -458,10 +458,10 @@ func TestRunAgentDeleteValidatesPathBeforeDeletion(t *testing.T) {
 
 func TestRunDeleteReturnsJSONOnlyAfterPermanentDeletion(t *testing.T) {
 	revision := "sha256:" + strings.Repeat("a", 64)
-	invocation := agentInvocation{
+	invocation := cliInvocation{
 		command:    "delete",
 		jsonOutput: true,
-		limit:      defaultAgentSearchLimit,
+		limit:      defaultCLISearchLimit,
 		ifRevision: &revision,
 		operands:   []string{"note.md"},
 	}
@@ -481,7 +481,7 @@ func TestRunDeleteReturnsJSONOnlyAfterPermanentDeletion(t *testing.T) {
 	}
 }
 
-func TestRunAgentCommandHelpDoesNotLoadConfiguration(t *testing.T) {
+func TestRunCLICommandHelpDoesNotLoadConfiguration(t *testing.T) {
 	t.Setenv("JOTMD_PREVIEW_MAX_BYTES", "invalid")
 	tests := []struct {
 		command string
@@ -503,7 +503,7 @@ func TestRunAgentCommandHelpDoesNotLoadConfiguration(t *testing.T) {
 	}
 }
 
-func TestRunRootHelpListsOnlyImplementedAgentCommands(t *testing.T) {
+func TestRunRootHelpListsOnlyImplementedCLICommands(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := Run(context.Background(), []string{"--help"}, strings.NewReader(""), &stdout, &stderr)
 	if code != 0 || stderr.Len() != 0 {
@@ -521,7 +521,7 @@ func TestRunRootHelpListsOnlyImplementedAgentCommands(t *testing.T) {
 	}
 }
 
-func writeAgentNote(t *testing.T, root, path, content string) {
+func writeCLINote(t *testing.T, root, path, content string) {
 	t.Helper()
 	absolute := filepath.Join(root, filepath.FromSlash(path))
 	if err := os.MkdirAll(filepath.Dir(absolute), 0o755); err != nil {

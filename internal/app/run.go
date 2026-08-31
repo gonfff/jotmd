@@ -37,12 +37,12 @@ func Version() string {
 }
 
 func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.Writer, releaseVersion ...string) int {
-	invocation, handled, agentErr := parseAgentInvocation(args)
+	invocation, handled, cliErr := parseCLIInvocation(args)
 	if handled {
-		if agentErr != nil {
-			return writeAgentError(stderr, invocation.jsonOutput, invalidAgentInput("%s", agentErr))
+		if cliErr != nil {
+			return writeCLIError(stderr, invocation.jsonOutput, invalidCLIInput("%s", cliErr))
 		}
-		return runAgentCLI(ctx, invocation, stdin, stdout, stderr)
+		return runCLI(ctx, invocation, stdin, stdout, stderr)
 	}
 
 	flags := flag.NewFlagSet("jotmd", flag.ContinueOnError)

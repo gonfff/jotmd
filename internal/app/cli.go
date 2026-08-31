@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	defaultAgentSearchLimit = 20
-	maxAgentSearchLimit     = 200
-	rootUsage               = `Usage:
+	defaultCLISearchLimit = 20
+	maxCLISearchLimit     = 200
+	rootUsage             = `Usage:
   jotmd [TUI options]
   jotmd [--notes-dir PATH] search [--limit N] QUERY [--json]
   jotmd [--notes-dir PATH] get PATH [--json]
@@ -36,7 +36,7 @@ Run jotmd COMMAND --help for command details.
 `
 )
 
-type agentInvocation struct {
+type cliInvocation struct {
 	command    string
 	notesDir   *string
 	jsonOutput bool
@@ -46,9 +46,9 @@ type agentInvocation struct {
 	operands   []string
 }
 
-func parseAgentInvocation(args []string) (agentInvocation, bool, error) {
-	invocation := agentInvocation{jsonOutput: hasJSONOption(args), limit: defaultAgentSearchLimit}
-	if !containsAgentCommand(args) {
+func parseCLIInvocation(args []string) (cliInvocation, bool, error) {
+	invocation := cliInvocation{jsonOutput: hasJSONOption(args), limit: defaultCLISearchLimit}
+	if !containsCLICommand(args) {
 		return invocation, false, nil
 	}
 
@@ -113,8 +113,8 @@ func parseAgentInvocation(args []string) (agentInvocation, bool, error) {
 	if len(invocation.operands) != 1 {
 		return invocation, true, fmt.Errorf("%s requires exactly one argument", invocation.command)
 	}
-	if invocation.limit < 1 || invocation.limit > maxAgentSearchLimit {
-		return invocation, true, fmt.Errorf("--limit must be between 1 and %d", maxAgentSearchLimit)
+	if invocation.limit < 1 || invocation.limit > maxCLISearchLimit {
+		return invocation, true, fmt.Errorf("--limit must be between 1 and %d", maxCLISearchLimit)
 	}
 	if limitSet && invocation.command != "search" {
 		return invocation, true, fmt.Errorf("--limit is only valid with search")
@@ -128,14 +128,14 @@ func parseAgentInvocation(args []string) (agentInvocation, bool, error) {
 	return invocation, true, nil
 }
 
-func runAgentCLI(ctx context.Context, invocation agentInvocation, stdin io.Reader, stdout, stderr io.Writer) int {
+func runCLI(ctx context.Context, invocation cliInvocation, stdin io.Reader, stdout, stderr io.Writer) int {
 	if invocation.help {
-		if err := writeAgentHelp(stdout, invocation.command); err != nil {
+		if err := writeCLIHelp(stdout, invocation.command); err != nil {
 			return 1
 		}
 		return 0
 	}
-	store, err := loadAgentStore(invocation.notesDir)
+	store, err := loadCLIStore(invocation.notesDir)
 	if err == nil {
 		switch invocation.command {
 		case "search":
@@ -149,12 +149,12 @@ func runAgentCLI(ctx context.Context, invocation agentInvocation, stdin io.Reade
 		}
 	}
 	if err != nil {
-		return writeAgentError(stderr, invocation.jsonOutput, err)
+		return writeCLIError(stderr, invocation.jsonOutput, err)
 	}
 	return 0
 }
 
-func writeAgentHelp(output io.Writer, command string) error {
+func writeCLIHelp(output io.Writer, command string) error {
 	var help string
 	switch command {
 	case "search":
@@ -184,7 +184,7 @@ Permanently delete one unchanged Markdown note. This operation cannot be undone.
 	return err
 }
 
-func loadAgentStore(notesDir *string) (*notes.Store, error) {
+func loadCLIStore(notesDir *string) (*notes.Store, error) {
 	path, err := config.DefaultPath(os.LookupEnv)
 	if err != nil {
 		return nil, err
@@ -232,10 +232,10 @@ type searchJSON struct {
 	Stats     searchStatsJSON    `json:"stats"`
 }
 
-func runSearch(ctx context.Context, store *notes.Store, invocation agentInvocation, output io.Writer) error {
+func runSearch(ctx context.Context, store *notes.Store, invocation cliInvocation, output io.Writer) error {
 	query := invocation.operands[0]
 	if query == "" {
-		return invalidAgentInput("search query must not be empty")
+		return invalidCLIInput("search query must not be empty")
 	}
 	snapshot, err := store.Scan(ctx)
 	if err != nil {
@@ -256,7 +256,7 @@ func runSearch(ctx context.Context, store *notes.Store, invocation agentInvocati
 				Snippet: match.Snippet,
 			}
 		}
-		return encodeAgentJSON(output, searchJSON{
+		return encodeCLIJSON(output, searchJSON{
 			Query:     query,
 			Results:   results,
 			Truncated: stats.Truncated,
@@ -286,8 +286,8 @@ type getJSON struct {
 	Content  string `json:"content"`
 }
 
-func runGet(ctx context.Context, store *notes.Store, invocation agentInvocation, output io.Writer) error {
-	path, err := parseAgentNotePath(invocation.operands[0])
+func runGet(ctx context.Context, store *notes.Store, invocation cliInvocation, output io.Writer) error {
+	path, err := parseCLINotePath(invocation.operands[0])
 	if err != nil {
 		return err
 	}
@@ -297,9 +297,9 @@ func runGet(ctx context.Context, store *notes.Store, invocation agentInvocation,
 	}
 	if invocation.jsonOutput {
 		if !utf8.Valid(document.Content) {
-			return &agentError{code: "invalid_encoding", message: fmt.Sprintf("note %q is not valid UTF-8", path), exitCode: 2}
+			return &cliError{code: "invalid_encoding", message: fmt.Sprintf("note %q is not valid UTF-8", path), exitCode: 2}
 		}
-		return encodeAgentJSON(output, getJSON{
+		return encodeCLIJSON(output, getJSON{
 			Path:     string(document.Path),
 			Revision: string(document.Revision),
 			Content:  string(document.Content),
@@ -315,8 +315,8 @@ type writeJSON struct {
 	Created  bool   `json:"created"`
 }
 
-func runWrite(ctx context.Context, store *notes.Store, invocation agentInvocation, input io.Reader, output io.Writer) error {
-	path, err := parseAgentNotePath(invocation.operands[0])
+func runWrite(ctx context.Context, store *notes.Store, invocation cliInvocation, input io.Reader, output io.Writer) error {
+	path, err := parseCLINotePath(invocation.operands[0])
 	if err != nil {
 		return err
 	}
@@ -340,15 +340,15 @@ func runWrite(ctx context.Context, store *notes.Store, invocation agentInvocatio
 			if expected != nil {
 				details["expected_revision"] = string(*expected)
 			}
-			return &agentError{code: "revision_conflict", message: "note changed since it was read", details: details, exitCode: 4, cause: err}
+			return &cliError{code: "revision_conflict", message: "note changed since it was read", details: details, exitCode: 4, cause: err}
 		case errors.Is(err, notes.ErrExists):
-			return &agentError{code: "already_exists", message: "note already exists", details: map[string]any{"path": string(path)}, exitCode: 4, cause: err}
+			return &cliError{code: "already_exists", message: "note already exists", details: map[string]any{"path": string(path)}, exitCode: 4, cause: err}
 		default:
 			return err
 		}
 	}
 	if invocation.jsonOutput {
-		return encodeAgentJSON(output, writeJSON{
+		return encodeCLIJSON(output, writeJSON{
 			Path:     string(result.Path),
 			Revision: string(result.Revision),
 			Created:  result.Created,
@@ -364,13 +364,13 @@ type deleteJSON struct {
 	Action   string `json:"action"`
 }
 
-func runDelete(ctx context.Context, invocation agentInvocation, output io.Writer, deleteNote func(context.Context, notes.RelPath, notes.Revision) error) error {
-	path, err := parseAgentNotePath(invocation.operands[0])
+func runDelete(ctx context.Context, invocation cliInvocation, output io.Writer, deleteNote func(context.Context, notes.RelPath, notes.Revision) error) error {
+	path, err := parseCLINotePath(invocation.operands[0])
 	if err != nil {
 		return err
 	}
 	if invocation.ifRevision == nil {
-		return invalidAgentInput("delete requires --if-revision")
+		return invalidCLIInput("delete requires --if-revision")
 	}
 	revision, err := notes.ParseRevision(*invocation.ifRevision)
 	if err != nil {
@@ -378,7 +378,7 @@ func runDelete(ctx context.Context, invocation agentInvocation, output io.Writer
 	}
 	if err := deleteNote(ctx, path, revision); err != nil {
 		if errors.Is(err, notes.ErrRevisionConflict) {
-			return &agentError{
+			return &cliError{
 				code:    "revision_conflict",
 				message: "note changed since it was read",
 				details: map[string]any{
@@ -394,30 +394,30 @@ func runDelete(ctx context.Context, invocation agentInvocation, output io.Writer
 	if !invocation.jsonOutput {
 		return nil
 	}
-	return encodeAgentJSON(output, deleteJSON{
+	return encodeCLIJSON(output, deleteJSON{
 		Path:     string(path),
 		Revision: string(revision),
 		Action:   "deleted",
 	})
 }
 
-func parseAgentNotePath(value string) (notes.RelPath, error) {
+func parseCLINotePath(value string) (notes.RelPath, error) {
 	if value == "" || filepath.IsAbs(value) || strings.ContainsAny(value, "\\\x00") {
-		return "", invalidAgentInput("invalid note path %q", value)
+		return "", invalidCLIInput("invalid note path %q", value)
 	}
 	parts := strings.Split(value, "/")
 	for _, part := range parts {
 		if part == "" || part == "." || part == ".." {
-			return "", invalidAgentInput("invalid note path %q", value)
+			return "", invalidCLIInput("invalid note path %q", value)
 		}
 	}
 	if !strings.EqualFold(filepath.Ext(parts[len(parts)-1]), ".md") {
-		return "", invalidAgentInput("note path %q must end in .md", value)
+		return "", invalidCLIInput("note path %q must end in .md", value)
 	}
 	return notes.RelPath(value), nil
 }
 
-type agentError struct {
+type cliError struct {
 	code     string
 	message  string
 	details  map[string]any
@@ -425,11 +425,11 @@ type agentError struct {
 	cause    error
 }
 
-func (e *agentError) Error() string { return e.message }
-func (e *agentError) Unwrap() error { return e.cause }
+func (e *cliError) Error() string { return e.message }
+func (e *cliError) Unwrap() error { return e.cause }
 
-func invalidAgentInput(format string, args ...any) error {
-	return &agentError{code: "invalid_input", message: fmt.Sprintf(format, args...), exitCode: 2}
+func invalidCLIInput(format string, args ...any) error {
+	return &cliError{code: "invalid_input", message: fmt.Sprintf(format, args...), exitCode: 2}
 }
 
 type errorBody struct {
@@ -442,14 +442,14 @@ type errorEnvelope struct {
 	Error errorBody `json:"error"`
 }
 
-func writeAgentError(output io.Writer, jsonOutput bool, err error) int {
-	mapped := mapAgentError(err)
+func writeCLIError(output io.Writer, jsonOutput bool, err error) int {
+	mapped := mapCLIError(err)
 	if mapped.details == nil {
 		mapped.details = map[string]any{}
 	}
 	var outputErr error
 	if jsonOutput {
-		outputErr = encodeAgentJSON(output, errorEnvelope{Error: errorBody{
+		outputErr = encodeCLIJSON(output, errorEnvelope{Error: errorBody{
 			Code:    mapped.code,
 			Message: mapped.message,
 			Details: mapped.details,
@@ -463,36 +463,36 @@ func writeAgentError(output io.Writer, jsonOutput bool, err error) int {
 	return mapped.exitCode
 }
 
-func mapAgentError(err error) *agentError {
-	var mapped *agentError
+func mapCLIError(err error) *cliError {
+	var mapped *cliError
 	if errors.As(err, &mapped) {
 		return mapped
 	}
 	switch {
 	case errors.Is(err, notes.ErrRecoveryRequired):
-		return &agentError{code: "recovery_required", message: err.Error(), exitCode: 6, cause: err}
+		return &cliError{code: "recovery_required", message: err.Error(), exitCode: 6, cause: err}
 	case errors.Is(err, notes.ErrInvalidRevision), errors.Is(err, notes.ErrNotRegularFile):
-		return &agentError{code: "invalid_input", message: err.Error(), exitCode: 2, cause: err}
+		return &cliError{code: "invalid_input", message: err.Error(), exitCode: 2, cause: err}
 	case errors.Is(err, fs.ErrNotExist):
-		return &agentError{code: "not_found", message: err.Error(), exitCode: 3, cause: err}
+		return &cliError{code: "not_found", message: err.Error(), exitCode: 3, cause: err}
 	case errors.Is(err, notes.ErrRevisionConflict):
-		return &agentError{code: "revision_conflict", message: err.Error(), exitCode: 4, cause: err}
+		return &cliError{code: "revision_conflict", message: err.Error(), exitCode: 4, cause: err}
 	case errors.Is(err, notes.ErrExists):
-		return &agentError{code: "already_exists", message: err.Error(), exitCode: 4, cause: err}
+		return &cliError{code: "already_exists", message: err.Error(), exitCode: 4, cause: err}
 	case errors.Is(err, fs.ErrPermission):
-		return &agentError{code: "permission_denied", message: err.Error(), exitCode: 5, cause: err}
+		return &cliError{code: "permission_denied", message: err.Error(), exitCode: 5, cause: err}
 	default:
-		return &agentError{code: "operation_failed", message: err.Error(), exitCode: 1, cause: err}
+		return &cliError{code: "operation_failed", message: err.Error(), exitCode: 1, cause: err}
 	}
 }
 
-func encodeAgentJSON(output io.Writer, value any) error {
+func encodeCLIJSON(output io.Writer, value any) error {
 	encoder := json.NewEncoder(output)
 	encoder.SetEscapeHTML(false)
 	return encoder.Encode(value)
 }
 
-func containsAgentCommand(args []string) bool {
+func containsCLICommand(args []string) bool {
 	options := true
 	for index := 0; index < len(args); index++ {
 		argument := args[index]

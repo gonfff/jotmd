@@ -220,7 +220,7 @@ The main structure is:
     <section id="using-the-tui">...</section>
     <section id="essential-keys">...</section>
     <section id="configuration">...</section>
-    <section id="agent-cli">...</section>
+    <section id="cli">...</section>
     <section id="agent-memory">...</section>
     <section id="development">...</section>
   </article>
@@ -250,7 +250,7 @@ Include the current essential-key table, note-management capabilities, config
 precedence, editor fallback, theme behavior, and development commands. Use copy
 controls only for commands users are likely to run directly.
 
-- [ ] **Step 4: Add verified Agent CLI documentation**
+- [ ] **Step 4: Add verified CLI documentation**
 
 Document these exact forms and the safe revision workflow from `README.md`:
 

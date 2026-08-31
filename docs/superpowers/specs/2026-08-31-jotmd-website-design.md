@@ -149,7 +149,7 @@ Sections:
    - configuration locations and validation;
    - theme export/list commands and custom themes;
    - editor selection.
-5. **Agent CLI**
+5. **CLI**
    - `search`, `get`, `write`, and `delete` forms;
    - JSON output;
    - safe revision-based updates and deletes;

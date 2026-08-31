@@ -34,10 +34,10 @@ jotmd --notes-dir ~/vault
 
 JotMD uses `--editor` or the configured editor, then `$EDITOR`, then `vi`.
 
-## Agent CLI
+## CLI
 
-Four non-interactive commands cover the agent workflow while Markdown files
-remain the source of truth:
+Four non-interactive commands cover scripted and interactive workflows while
+Markdown files remain the source of truth:
 
 ```text
 jotmd [--notes-dir PATH] search [--limit N] QUERY [--json]

@@ -134,9 +134,9 @@ git commit -m "feat: configure agent memory visibility"
 **Files:**
 
 - Modify: `internal/notes/search.go`
-- Modify: `internal/app/agent_cli.go`
+- Modify: `internal/app/cli.go`
 - Test: `internal/notes/search_test.go`
-- Test: `internal/app/agent_cli_test.go` (existing tests only unless a regression appears)
+- Test: `internal/app/cli_test.go` (existing tests only unless a regression appears)
 
 - [ ] **Step 1: Write the failing snapshot-scoped search test**
 
@@ -210,7 +210,7 @@ func (s *Store) SearchContentSnapshot(ctx context.Context, snapshot Snapshot, qu
 }
 ```
 
-Change `runSearch` in `internal/app/agent_cli.go` to reuse the snapshot it already scanned:
+Change `runSearch` in `internal/app/cli.go` to reuse the snapshot it already scanned:
 
 ```go
 contentMatches, stats, err := store.SearchContentSnapshot(ctx, snapshot, query, 8<<20, invocation.limit-len(matches))
@@ -229,7 +229,7 @@ Expected: PASS, including existing Unicode, cancellation, truncation, and agent 
 - [ ] **Step 5: Commit the search primitive**
 
 ```sh
-git add internal/notes/search.go internal/notes/search_test.go internal/app/agent_cli.go
+git add internal/notes/search.go internal/notes/search_test.go internal/app/cli.go
 git commit -m "refactor: search note content in a snapshot"
 ```
 
@@ -749,7 +749,7 @@ Expected: files exist, whitespace check passes, and the optional validator repor
 
 - [ ] **Step 4: Document installation and the user-visible behavior**
 
-Add an `Agent memory` section to `README.md` after `Agent CLI`. It must state:
+Add an `Agent memory` section to `README.md` after `CLI`. It must state:
 
 - prerequisite: install `jotmd` and keep it on `PATH`;
 - opt-in and best-effort model invocation;
