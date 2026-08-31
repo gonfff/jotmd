@@ -72,7 +72,7 @@ func TestInitKeymapTemplateLoadsEveryWorkflowBinding(t *testing.T) {
 		"note.trash":        "d",
 		"note.delete":       "D",
 		"search.open":       "/",
-		"app.palette":       ":",
+		"app.palette":       "P",
 		"preview.raw":       "v",
 		"preview.wrap":      "w",
 		"preview.style":     "s",

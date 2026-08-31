@@ -22,7 +22,7 @@
 "app.help" = ["?"]
 "theme.select" = ["t"]
 "search.open" = ["/"]
-"app.palette" = [":"]
+"app.palette" = ["P"]
 "preview.raw" = ["v"]
 "preview.wrap" = ["w"]
 "preview.style" = ["s"]

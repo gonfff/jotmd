@@ -512,7 +512,7 @@ func temporaryInterfaceCases() []struct {
 		key   string
 		title string
 	}{
-		{name: "commands", key: ":", title: "Commands"},
+		{name: "commands", key: "P", title: "Commands"},
 		{name: "themes", key: "t", title: "> jotmd"},
 		{name: "trash", key: "d", title: "Move note.md to Trash?"},
 	}
@@ -949,8 +949,8 @@ func TestLayoutIndependentHotkeysCanonicalizeShiftedPhysicalKeys(t *testing.T) {
 			check:   func(model Model) bool { return model.help },
 		},
 		{
-			name:    "colon",
-			message: tea.KeyPressMsg(tea.Key{Code: 'ж', ShiftedCode: 'Ж', BaseCode: ';', Text: "Ж", Mod: tea.ModShift}),
+			name:    "command palette",
+			message: tea.KeyPressMsg(tea.Key{Code: 'з', ShiftedCode: 'З', BaseCode: 'p', Text: "З", Mod: tea.ModShift}),
 			check:   func(model Model) bool { return model.mode == CommandPalette },
 		},
 	}
@@ -991,7 +991,7 @@ func TestLayoutIndependentHotkeysWorkOutsideBrowseDispatch(t *testing.T) {
 
 	t.Run("search command palette", func(t *testing.T) {
 		model := updateModel(t, sizedLoadedModel(t), key("/"))
-		model = updateModel(t, model, tea.KeyPressMsg(tea.Key{Code: 'ж', ShiftedCode: 'Ж', BaseCode: ';', Text: "Ж", Mod: tea.ModShift}))
+		model = updateModel(t, model, tea.KeyPressMsg(tea.Key{Code: 'з', ShiftedCode: 'З', BaseCode: 'p', Text: "З", Mod: tea.ModShift}))
 		if model.mode != CommandPalette {
 			t.Fatalf("mode = %v, want command palette", model.mode)
 		}

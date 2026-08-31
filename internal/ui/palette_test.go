@@ -57,7 +57,7 @@ func hasBinding(bindings []Binding, want Binding) bool {
 func TestActionPaletteFiltersDisablesDispatchesAndCancels(t *testing.T) {
 	model := sizedLoadedModel(t)
 	model.editorCommand.Executable = ""
-	model = updateModel(t, model, key(":"))
+	model = updateModel(t, model, key("P"))
 	model = updateModel(t, model, key("edit"))
 	view := ansi.Strip(model.View().Content)
 	if !strings.Contains(view, "edit") || !strings.Contains(view, "editor not configured") {
@@ -73,7 +73,7 @@ func TestActionPaletteFiltersDisablesDispatchesAndCancels(t *testing.T) {
 	}
 
 	model = sizedLoadedModel(t)
-	model = updateModel(t, model, key(":"))
+	model = updateModel(t, model, key("P"))
 	model = updateModel(t, model, key("new note"))
 	model = updateModel(t, model, key("enter"))
 	if model.mode != NewNotePrompt {
@@ -94,16 +94,16 @@ func TestActionPaletteEnablesCopyAndMoveForDirectory(t *testing.T) {
 func TestActionPaletteOpensFromSearchAndOmitsModalControls(t *testing.T) {
 	model := sizedLoadedModel(t)
 	model = updateModel(t, model, key("tab"))
-	model = updateModel(t, model, key(":"))
+	model = updateModel(t, model, key("P"))
 	if model.mode != CommandPalette || model.focus != ContextPreview {
 		t.Fatalf("preview palette state = (%v, %v), want CommandPalette from preview", model.mode, model.focus)
 	}
 	model = updateModel(t, model, key("esc"))
 
 	model = updateModel(t, model, key("/"))
-	model = updateModel(t, model, key(":"))
+	model = updateModel(t, model, key("P"))
 	if model.mode == SearchPrompt {
-		t.Fatal("search colon did not enter the palette")
+		t.Fatal("search Shift+P did not enter the palette")
 	}
 	if view := ansi.Strip(model.View().Content); strings.Contains(view, "theme.apply") || strings.Contains(view, "help.close") {
 		t.Fatalf("palette view exposed modal controls: %q", view)
@@ -116,7 +116,7 @@ func TestActionPaletteOpensFromSearchAndOmitsModalControls(t *testing.T) {
 
 func TestActionPaletteShowsReloadedEffectiveKeys(t *testing.T) {
 	model := sizedLoadedModel(t)
-	model = updateModel(t, model, key(":"))
+	model = updateModel(t, model, key("P"))
 	model = updateModel(t, model, configReloadResult{resolved: resolvedConfig{
 		Config: config.Defaults(),
 		keymap: config.Keymap{Bindings: []config.Binding{

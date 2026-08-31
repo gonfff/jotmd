@@ -134,7 +134,7 @@ canonical skill at `~/.config/opencode/skills/jot-memory/SKILL.md`.
 | `/` | Search |
 | `t` | Select a theme |
 | `a` | Show/hide agent memory |
-| `:` | Open the command palette |
+| `Shift+P` | Open the command palette |
 | `?` | Show all key bindings |
 | `q` | Quit |
 

@@ -35,7 +35,7 @@ func DefaultBindings() []Binding {
 		{Name: "app.help", Action: ActionHelp, Keys: []string{"?"}, Label: "help", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
 		{Name: "theme.select", Action: ActionThemeSelect, Keys: []string{"t"}, Label: "theme", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
 		{Name: "search.open", Action: ActionSearch, Keys: []string{"/"}, Label: "search", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
-		{Name: "app.palette", Action: ActionPalette, Keys: []string{":"}, Label: "commands", Contexts: []Context{ContextTree, ContextTOC, ContextPreview, ContextSearch}},
+		{Name: "app.palette", Action: ActionPalette, Keys: []string{"P"}, Label: "commands", Contexts: []Context{ContextTree, ContextTOC, ContextPreview, ContextSearch}},
 		{Name: "preview.raw", Action: ActionPreviewRaw, Keys: []string{"v"}, Label: "raw", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
 		{Name: "preview.wrap", Action: ActionPreviewWrap, Keys: []string{"w"}, Label: "wrap", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
 		{Name: "preview.style", Action: ActionPreviewStyle, Keys: []string{"s"}, Label: "render style", Contexts: []Context{ContextTree, ContextTOC, ContextPreview}},
