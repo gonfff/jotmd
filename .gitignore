@@ -4,7 +4,6 @@
 .worktrees/
 bin/
 dist/
-site/
 .venv-docs/
 coverage.out
 coverage.html

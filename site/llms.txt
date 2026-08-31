@@ -1,0 +1,327 @@
+# JotMD
+
+> JotMD is a keyboard-first Markdown TUI for the terminal. It browses, searches, previews, and manages ordinary Markdown files. Its optional jot-memory integration gives supported coding agents durable, human-readable memory in the same vault.
+
+## Product model
+
+JotMD works directly with directories and `.md` files. There is no database,
+import format, or proprietary sync layer. Git, filesystem tools, scripts, and
+other editors can use the same vault.
+
+The interactive TUI provides:
+
+- a directory and note tree;
+- a live, wrapping Markdown preview;
+- search across note names and contents;
+- a Markdown table of contents and raw view;
+- note and directory creation;
+- rename, copy, move, trash, restore, and permanent delete operations;
+- live reload of notes, configuration, and key bindings;
+- 11 bundled themes and custom TOML themes;
+- configurable key bindings and a command palette.
+
+The non-interactive CLI provides revision-safe `search`, `get`, `write`,
+and `delete` commands with optional JSON output.
+
+The optional `jot-memory` skill lets Codex, Claude Code, and OpenCode recall
+useful global or project knowledge before substantial work and capture durable
+findings afterward. Memory remains ordinary Markdown.
+
+## Requirements
+
+The Homebrew package supports macOS and Linux. Building from source requires Go
+1.26 or newer and `just`.
+
+JotMD selects an editor in this order:
+
+1. the `--editor` CLI flag;
+2. `$JOTMD_EDITOR`;
+3. the configured editor;
+4. `$EDITOR`;
+5. `vi`.
+
+## Installation
+
+Homebrew:
+
+```sh
+brew install gonfff/tap/jotmd
+```
+
+Build from source:
+
+```sh
+git clone https://github.com/gonfff/jotmd.git
+cd jotmd
+just install
+```
+
+`just install` writes the binary to `~/.local/bin/jotmd`.
+
+## Quick start
+
+Run JotMD:
+
+```sh
+jotmd
+```
+
+On first launch, JotMD asks where notes live, creates the directory if needed,
+and persists that choice. To skip the prompt:
+
+```sh
+mkdir -p ~/vault
+jotmd --notes-dir ~/vault
+```
+
+## Using the TUI
+
+The main screen keeps the vault tree beside the rendered Markdown preview.
+Expand directories, select a note to preview it, and use `Tab` to switch focus
+between the tree, table of contents, and preview.
+
+Press `/` to search note names and contents. Results retain the preview. Press
+`Shift+P` for the command palette and `?` for all effective key bindings.
+
+### Essential keys
+
+| Key | Action |
+| --- | --- |
+| `j` / `k`, arrows | Navigate |
+| `Enter` / `Space` | Expand or open |
+| `Tab` | Switch tree and preview |
+| `e` | Edit the selected note |
+| `n` / `N` | Create a note / directory |
+| `/` | Search |
+| `t` | Select a theme |
+| `a` | Show or hide agent memory |
+| `Shift+P` | Open the command palette |
+| `?` | Show all key bindings |
+| `q` | Quit |
+
+Print the effective bindings:
+
+```sh
+jotmd --dump-keys
+```
+
+Permanent deletion cannot be undone. Prefer trash unless immediate removal is
+required.
+
+## Configuration and themes
+
+Configuration lives under `~/.config/jotmd/`, or
+`$XDG_CONFIG_HOME/jotmd/` when that variable is set.
+
+Precedence is:
+
+1. CLI flags;
+2. environment variables;
+3. `config.toml`;
+4. built-in defaults.
+
+Every setting has the same three forms:
+
+| `config.toml` | Environment | CLI |
+| --- | --- | --- |
+| `notes_dir` | `JOTMD_NOTES_DIR` | `--notes-dir` |
+| `editor` | `JOTMD_EDITOR` | `--editor` |
+| `theme` | `JOTMD_THEME` | `--theme` |
+| `theme_colors` | `JOTMD_THEME_COLORS` | `--theme-colors` |
+| `tree_width` | `JOTMD_TREE_WIDTH` | `--tree-width` |
+| `no_color` | `JOTMD_NO_COLOR` or `NO_COLOR` | `--no-color` |
+| `show_hidden` | `JOTMD_SHOW_HIDDEN` | `--show-hidden` |
+| `show_agent_memory` | `JOTMD_SHOW_AGENT_MEMORY` | `--show-agent-memory` |
+| `ignore` | `JOTMD_IGNORE` | `--ignore` |
+| `sort` | `JOTMD_SORT` | `--sort` |
+| `directories_first` | `JOTMD_DIRECTORIES_FIRST` | `--directories-first` |
+| `status_bar` | `JOTMD_STATUS_BAR` | `--status-bar` |
+| `watch` | `JOTMD_WATCH` | `--watch` |
+| `preview.wrap` | `JOTMD_PREVIEW_WRAP` | `--preview-wrap` |
+| `preview.max_bytes` | `JOTMD_PREVIEW_MAX_BYTES` | `--preview-max-bytes` |
+| `preview.render_style` | `JOTMD_PREVIEW_RENDER_STYLE` | `--preview-render-style` |
+
+Boolean CLI overrides accept explicit values such as `--watch=false`.
+`theme_colors` environment and CLI values use a TOML inline table, for example
+`'{ accent = "#77AD91" }'`. `ignore` uses the operating system's path-list
+separator (`:` on Unix, `;` on Windows).
+
+Useful commands:
+
+```sh
+jotmd --dump-config
+jotmd config check
+jotmd config check /path/to/config.toml
+jotmd --list-themes
+jotmd --init-themes
+```
+
+`--init-themes` exports bundled themes as editable TOML files without
+overwriting existing customizations.
+
+## CLI
+
+The four command forms are:
+
+```text
+jotmd [--notes-dir PATH] search [--limit N] QUERY [--json]
+jotmd [--notes-dir PATH] get PATH [--json]
+jotmd [--notes-dir PATH] write [--if-revision REVISION] PATH [--json]
+jotmd [--notes-dir PATH] delete --if-revision REVISION PATH [--json]
+```
+
+`write` without `--if-revision` creates a missing note and refuses to overwrite
+an existing one. To update safely, read the current revision and send it back:
+
+```sh
+jotmd --notes-dir ./notes search "refresh token redis" --json
+jotmd --notes-dir ./notes get projects/foo/pitfalls.md --json > /tmp/note.json
+jq -rj '.content' /tmp/note.json > /tmp/note.md
+revision=$(jq -r '.revision' /tmp/note.json)
+
+# Edit /tmp/note.md, then update only if the note is unchanged.
+jotmd --notes-dir ./notes write projects/foo/pitfalls.md \
+  --if-revision "$revision" < /tmp/note.md
+```
+
+`delete` requires the same revision check and permanently removes one note. With
+`--json`, successes use stdout and errors use stderr.
+
+## Agent memory
+
+The `jot-memory` skill lets Codex, Claude Code, and OpenCode recall and maintain
+durable Markdown notes through the JotMD CLI. The agent decides whether a
+substantial work unit needs recall and whether its result is worth preserving.
+Trivial requests intentionally skip memory.
+
+### Prerequisite
+
+Install JotMD, confirm it is on `PATH`, and select the vault shared by the TUI
+and agents:
+
+```sh
+brew install gonfff/tap/jotmd
+command -v jotmd
+jotmd
+```
+
+Agent-managed notes live under:
+
+```text
+agent-memory/
+├── global/
+└── projects/<project-id>/
+```
+
+`agent-memory/` is a reserved top-level vault directory. Before enabling the
+integration, move unrelated user content out of that directory or explicitly
+adopt it as agent-managed memory. Case variants are rejected.
+
+JotMD hides the directory by default. Press `a` to show or hide it, or set:
+
+```toml
+show_agent_memory = true
+```
+
+### Codex installation
+
+```sh
+codex plugin marketplace add gonfff/jotmd
+codex plugin add jot-memory@jotmd
+```
+
+Start a new Codex thread so the skill is loaded. Inspect the installation with
+`codex plugin list`.
+
+Update:
+
+```sh
+brew upgrade jotmd
+codex plugin marketplace upgrade jotmd
+codex plugin add jot-memory@jotmd
+```
+
+Remove:
+
+```sh
+codex plugin remove jot-memory@jotmd
+codex plugin marketplace remove jotmd
+```
+
+### Claude Code installation
+
+```sh
+claude plugin marketplace add gonfff/jotmd
+claude plugin install jot-memory@jotmd
+```
+
+Restart Claude Code after installation or update. Inspect the installation with
+`claude plugin list`.
+
+Update:
+
+```sh
+brew upgrade jotmd
+claude plugin marketplace update jotmd
+claude plugin update jot-memory@jotmd
+```
+
+Remove:
+
+```sh
+claude plugin uninstall jot-memory@jotmd
+claude plugin marketplace remove jotmd
+```
+
+### OpenCode installation
+
+OpenCode discovers global skills under
+`~/.config/opencode/skills/<name>/SKILL.md`. Keep a shallow checkout and link
+the skill so updates remain one command:
+
+```sh
+git clone --depth 1 https://github.com/gonfff/jotmd.git ~/.local/share/jotmd
+mkdir -p ~/.config/opencode/skills
+ln -s ~/.local/share/jotmd/skills/jot-memory \
+  ~/.config/opencode/skills/jot-memory
+```
+
+Update:
+
+```sh
+brew upgrade jotmd
+git -C ~/.local/share/jotmd pull --ff-only
+```
+
+Remove the skill link while keeping the checkout and vault:
+
+```sh
+unlink ~/.config/opencode/skills/jot-memory
+```
+
+Restart OpenCode after installation or update.
+
+### Verify the integration
+
+Start a new agent session in a Git repository and ask it to perform substantial
+research or implementation. The agent should consider memory before the work
+and report every note it changes afterward.
+
+Agent-created notes are ordinary Markdown and remain directly inspectable and
+editable.
+
+## Development
+
+```sh
+just run       # run from the checkout
+just build     # build bin/jotmd
+just test      # run tests
+just check     # format check, vet, and tests
+```
+
+## Links
+
+- [Homepage](https://gonfff.github.io/jotmd/)
+- [Human-readable documentation](https://gonfff.github.io/jotmd/docs.html)
+- [Source](https://github.com/gonfff/jotmd)
+- [License](https://github.com/gonfff/jotmd/blob/master/LICENSE)

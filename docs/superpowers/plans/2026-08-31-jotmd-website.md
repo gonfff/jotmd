@@ -4,9 +4,9 @@
 
 **Goal:** Publish a distinctive English landing page and detailed documentation page for the JotMD terminal TUI from the repository's `docs/` directory.
 
-**Architecture:** Use hand-written static HTML, one shared CSS file, and one progressively enhanced JavaScript file. GitHub Pages serves `docs/` directly; relative URLs keep the site valid beneath the repository path and under a local HTTP server. A small `just site-check` recipe protects the required files, content, and relative-link contract without adding dependencies.
+**Architecture:** Use hand-written static HTML, one shared CSS file, and one progressively enhanced JavaScript file. GitHub Pages serves `docs/` directly; relative URLs keep the site valid beneath the repository path and under a local HTTP server. One Go integration test serves the real `docs/` tree and verifies pages, local assets, and anchors without adding dependencies.
 
-**Tech Stack:** HTML5, CSS, browser JavaScript, POSIX shell assertions in `just`, GitHub Pages
+**Tech Stack:** HTML5, CSS, browser JavaScript, Go standard-library integration test, GitHub Pages
 
 **Spec:** `docs/superpowers/specs/2026-08-31-jotmd-website-design.md`
 
@@ -26,7 +26,7 @@
 ### Task 1: Static-site contract and landing page
 
 **Files:**
-- Modify: `justfile`
+- Create: `internal/sitecheck/site_test.go`
 - Create: `docs/index.html`
 - Create: `docs/styles.css`
 - Create: `docs/site.js`
@@ -34,42 +34,23 @@
 
 **Interfaces:**
 - Consumes: `docs/images/jotmd.png`, existing install command and feature descriptions from `README.md`
-- Produces: shared classes and tokens in `docs/styles.css`; `data-copy` controls handled by `docs/site.js`; `just site-check`
+- Produces: shared classes and tokens in `docs/styles.css`; `data-copy` controls handled by `docs/site.js`; HTTP-level static-site test coverage
 
-- [ ] **Step 1: Add the failing landing-page contract**
+- [ ] **Step 1: Add the failing landing-page integration test**
 
-Append this recipe to `justfile` and call it from `check` before the Go checks:
-
-```just
-site-check:
-    #!/bin/sh
-    set -eu
-    test -f docs/index.html
-    test -f docs/docs.html
-    test -f docs/styles.css
-    test -f docs/site.js
-    test -f docs/.nojekyll
-    rg -q 'keyboard-first Markdown TUI' docs/index.html
-    rg -q 'images/jotmd.png' docs/index.html
-    rg -q 'href="docs.html"' docs/index.html
-    rg -q 'id="agent-memory"' docs/index.html
-    rg -q 'id="agent-memory"' docs/docs.html
-    ! rg -n '(href|src)="/' docs/index.html docs/docs.html
-
-check: site-check
-    @just --fmt --check
-    @go vet ./...
-    @just test
-```
-
-Keep the existing `check` body once; replace its declaration rather than adding
-a duplicate recipe.
+Create `internal/sitecheck/site_test.go`. Start `httptest.NewServer` with
+`http.FileServer(http.Dir("../../docs"))`, request `/`, and require status 200.
+Extract relative `href` and `src` values with a small regexp, skip external and
+fragment-only links, request non-HTML assets, and require status 200. This test
+catches a missing landing page, stylesheet, script, image, or broken relative
+asset path while exercising the actual static server.
 
 - [ ] **Step 2: Run the contract and verify it fails**
 
-Run: `just site-check`
+Run: `go test ./internal/sitecheck -run TestLandingPageServesLocalAssets -count=1`
 
-Expected: FAIL because `docs/index.html` and `docs/docs.html` do not exist.
+Expected: FAIL because requesting `/` returns a directory listing without the
+required page assets.
 
 - [ ] **Step 3: Create the landing-page markup**
 
@@ -164,31 +145,24 @@ document.addEventListener("click", async (event) => {
 
 Add an empty `docs/.nojekyll` file.
 
-- [ ] **Step 6: Run the partial contract**
+- [ ] **Step 6: Run the landing-page integration test**
 
-Run: `just site-check`
+Run: `go test ./internal/sitecheck -run TestLandingPageServesLocalAssets -count=1`
 
-Expected: FAIL only because `docs/docs.html` has not been created yet. Confirm
-the landing-page assertions themselves pass with:
-
-```sh
-test -f docs/index.html
-rg -q 'keyboard-first Markdown TUI' docs/index.html
-rg -q 'images/jotmd.png' docs/index.html
-rg -q 'href="docs.html"' docs/index.html
-rg -q 'id="agent-memory"' docs/index.html
-```
+Expected: PASS. The landing page and each referenced CSS, JavaScript, and image
+asset return HTTP 200.
 
 - [ ] **Step 7: Commit the landing page**
 
 ```sh
-git add justfile docs/.nojekyll docs/index.html docs/styles.css docs/site.js
+git add internal/sitecheck/site_test.go docs/.nojekyll docs/index.html docs/styles.css docs/site.js
 git commit -m "feat: add JotMD product landing page"
 ```
 
 ### Task 2: Detailed documentation page
 
 **Files:**
+- Modify: `internal/sitecheck/site_test.go`
 - Create: `docs/docs.html`
 - Reuse: `docs/styles.css`, `docs/site.js`
 
@@ -196,11 +170,16 @@ git commit -m "feat: add JotMD product landing page"
 - Consumes: shared header, typography, code, table, button, and documentation layout classes from `docs/styles.css`
 - Produces: `docs.html#agent-memory` target used by the landing page and complete static product documentation
 
-- [ ] **Step 1: Confirm the documentation contract still fails**
+- [ ] **Step 1: Add and run the failing documentation integration test**
 
-Run: `just site-check`
+Extend `internal/sitecheck/site_test.go` with
+`TestDocumentationServesLocalLinksAndAnchors`. Request `/docs.html`, follow
+relative file links, and verify each fragment matches an `id` in the target
+document.
 
-Expected: FAIL at `test -f docs/docs.html`.
+Run: `go test ./internal/sitecheck -run TestDocumentationServesLocalLinksAndAnchors -count=1`
+
+Expected: FAIL because `/docs.html` is missing.
 
 - [ ] **Step 2: Create the documentation shell and navigation**
 
@@ -282,23 +261,107 @@ git clone --depth 1 https://github.com/gonfff/jotmd.git ~/.local/share/jotmd
 ln -s ~/.local/share/jotmd/skills/jot-memory ~/.config/opencode/skills/jot-memory
 ```
 
-- [ ] **Step 6: Run the site contract**
+- [ ] **Step 6: Run the site integration tests**
 
-Run: `just site-check`
+Run: `go test ./internal/sitecheck -count=1`
 
 Expected: PASS.
 
 - [ ] **Step 7: Commit the documentation page**
 
 ```sh
-git add docs/docs.html
+git add internal/sitecheck/site_test.go docs/docs.html
 git commit -m "docs: add detailed JotMD website guide"
 ```
 
-### Task 3: HTTP and repository validation
+### Task 3: Crawler and LLM discovery files
 
 **Files:**
-- Modify only if validation finds a real defect: `docs/index.html`, `docs/docs.html`, `docs/styles.css`, `docs/site.js`, `justfile`
+- Modify: `internal/sitecheck/site_test.go`
+- Modify: `docs/index.html`
+- Modify: `docs/docs.html`
+- Create: `docs/robots.txt`
+- Create: `docs/sitemap.xml`
+- Create: `docs/llms.txt`
+- Create: `docs/llms-full.txt`
+
+**Interfaces:**
+- Consumes: final public base URL `https://gonfff.github.io/jotmd/` and verified documentation content
+- Produces: search crawler discovery, XML sitemap, concise LLM index, and self-contained LLM context
+
+- [ ] **Step 1: Add and run the failing discovery-file test**
+
+Add `TestDiscoveryFiles` to `internal/sitecheck/site_test.go`. Request the four
+files from the real static server, decode `sitemap.xml` with `encoding/xml`, and
+verify it contains the absolute landing and docs URLs. Require the robots sitemap
+pointer, an H1 and absolute documentation links in `llms.txt`, and the core
+`Installation`, `Agent CLI`, and `Agent memory` sections in `llms-full.txt`.
+
+Run: `go test ./internal/sitecheck -run TestDiscoveryFiles -count=1`
+
+Expected: FAIL because `robots.txt`, `sitemap.xml`, `llms.txt`, and
+`llms-full.txt` do not exist.
+
+- [ ] **Step 2: Create crawler files**
+
+Create `docs/robots.txt`:
+
+```text
+User-agent: *
+Allow: /
+
+Sitemap: https://gonfff.github.io/jotmd/sitemap.xml
+```
+
+Create a valid sitemap URL set containing:
+
+```text
+https://gonfff.github.io/jotmd/
+https://gonfff.github.io/jotmd/docs.html
+```
+
+- [ ] **Step 3: Create LLM discovery files**
+
+Create `llms.txt` with the current proposal's H1, summary blockquote, short
+product context, and grouped absolute links to the homepage, documentation,
+agent-memory anchor, full context, source, and license.
+
+Create `llms-full.txt` as self-contained Markdown covering the verified product
+description, installation, quick start, TUI capabilities and keys,
+configuration/themes, safe Agent CLI revision workflow, and agent-memory setup
+for Codex, Claude Code, and OpenCode. Do not add claims or commands absent from
+the repository sources.
+
+- [ ] **Step 4: Link the LLM index from both HTML pages**
+
+Add this to each `<head>` using the correct relative path from that page:
+
+```html
+<link rel="alternate" type="text/markdown" href="llms.txt" title="JotMD documentation for language models">
+```
+
+- [ ] **Step 5: Run the discovery and complete site tests**
+
+Run:
+
+```sh
+go test ./internal/sitecheck -run TestDiscoveryFiles -count=1
+go test ./internal/sitecheck -count=1
+```
+
+Expected: PASS.
+
+- [ ] **Step 6: Commit discovery files**
+
+```sh
+git add internal/sitecheck/site_test.go docs/index.html docs/docs.html docs/robots.txt docs/sitemap.xml docs/llms.txt docs/llms-full.txt
+git commit -m "docs: add crawler and LLM discovery files"
+```
+
+### Task 4: HTTP and repository validation
+
+**Files:**
+- Modify only if validation finds a real defect: `docs/index.html`, `docs/docs.html`, `docs/styles.css`, `docs/site.js`, `internal/sitecheck/site_test.go`
 
 **Interfaces:**
 - Consumes: complete static site from Tasks 1 and 2
@@ -310,7 +373,7 @@ Run:
 
 ```sh
 git diff --check
-just site-check
+go test ./internal/sitecheck -count=1
 ```
 
 Expected: both commands exit 0.
@@ -335,21 +398,19 @@ curl -fsS -o /dev/null http://127.0.0.1:4173/images/jotmd.png
 
 Expected: every request exits 0.
 
-- [ ] **Step 3: Validate HTML links and anchors with the standard library**
+- [ ] **Step 3: Re-run the durable link and anchor validation**
 
-Run a temporary Python snippet that parses both files with `html.parser`, checks
-that every relative file target exists under `docs/`, and checks every local
-fragment against an element ID in the target document. Do not add this helper to
-the repository; `just site-check` keeps the durable contract while this is the
-one-time comprehensive check.
+Run: `go test ./internal/sitecheck -count=1`
 
-Expected: output `site links: ok`.
+Expected: PASS; the tests make real HTTP requests for both pages, referenced
+assets, relative page links, and fragment targets.
 
 - [ ] **Step 4: Run the repository check**
 
 Run: `just check`
 
-Expected: formatting, site contract, `go vet ./...`, and `go test ./... -count=1`
+Expected: formatting, `go vet ./...`, and `go test ./... -count=1` all pass,
+including the static-site integration tests.
 all pass.
 
 - [ ] **Step 5: Review the final diff and status**
@@ -361,6 +422,5 @@ git diff --stat HEAD~2..HEAD
 git status --short
 ```
 
-Expected: only pre-existing user changes remain unstaged; the two site commits
-contain `justfile`, `.nojekyll`, `index.html`, `docs.html`, `styles.css`, and
-`site.js`.
+Expected: the worktree is clean; the two site commits contain `.nojekyll`,
+`index.html`, `docs.html`, `styles.css`, `site.js`, and the static-site test.

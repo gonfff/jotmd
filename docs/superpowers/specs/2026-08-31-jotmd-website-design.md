@@ -27,6 +27,10 @@ The site is dependency-free static HTML, CSS, and minimal JavaScript:
 - `docs/docs.html` — detailed documentation;
 - `docs/styles.css` — shared responsive visual system;
 - `docs/site.js` — copy-to-clipboard enhancement for command blocks;
+- `docs/robots.txt` — crawler policy and sitemap pointer;
+- `docs/sitemap.xml` — absolute public URLs for the landing page and docs;
+- `docs/llms.txt` — concise Markdown index for agents and language models;
+- `docs/llms-full.txt` — self-contained Markdown product and usage reference;
 - `docs/.nojekyll` — serve static assets without Jekyll processing.
 
 GitHub Pages will publish the `docs/` directory from the default branch. All
@@ -182,12 +186,34 @@ those sources.
 - Layout remains usable at narrow mobile widths and large text sizes.
 - The site remains fully readable when JavaScript is unavailable.
 
+## Discovery files
+
+The public base URL is `https://gonfff.github.io/jotmd/` unless the deployment
+configuration provides a different final origin.
+
+- `robots.txt` allows crawling and points to the absolute sitemap URL.
+- `sitemap.xml` lists the landing page and detailed documentation page.
+- `llms.txt` follows the current llms.txt Markdown proposal: project H1,
+  blockquote summary, short context, and grouped absolute links.
+- `llms-full.txt` is the optional expanded companion convention. It contains a
+  self-contained Markdown account of the product, installation, TUI keys,
+  configuration, Agent CLI, and agent-memory integration.
+- Both HTML pages link to `llms.txt` with `rel="alternate"` and
+  `type="text/markdown"`.
+
+On a GitHub project site, `robots.txt` is published below `/jotmd/`, not at the
+`gonfff.github.io` origin root. The file remains useful for a future custom
+domain and for hosts that publish the directory at their origin root, but it
+cannot set an origin-wide crawl policy on GitHub project Pages.
+
 ## Validation
 
 - Serve `docs/` through a local HTTP server and request both pages and referenced
   assets over HTTP.
 - Check internal anchors and relative links for both the repository subpath and
   local-server cases.
+- Request `robots.txt`, `sitemap.xml`, `llms.txt`, and `llms-full.txt`; validate
+  the XML and required Markdown structure with the Go standard library.
 - Exercise copy controls in a browser when browser control is available.
 - Inspect desktop and mobile layouts when browser control is available.
 - Run `git diff --check` and the repository's `just check` before handoff.

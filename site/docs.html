@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — JotMD</title>
+  <meta name="description" content="Complete JotMD documentation: installation, terminal TUI, keys, configuration, CLI, themes, and durable agent memory.">
+  <meta name="theme-color" content="#0c0e12">
+  <meta property="og:title" content="JotMD Documentation">
+  <meta property="og:description" content="Install and use the JotMD terminal TUI, CLI, themes, configuration, and optional agent memory.">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="text/markdown" href="llms.txt" title="JotMD documentation for language models">
+  <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="docs-vault">
+    <aside class="docs-tree" aria-label="Documentation sections">
+      <div class="docs-tree-inner">
+        <nav class="docs-tree-links" aria-label="Project links">
+          <a href="index.html">Home</a>
+          <a href="https://github.com/gonfff/jotmd">GitHub ↗</a>
+        </nav>
+        <div class="docs-tree-scroll">
+          <nav aria-label="Documentation map">
+            <h2>docs/</h2>
+
+            <h3>Getting started</h3>
+            <a data-scroll-link href="#requirements" aria-current="location">Requirements</a>
+            <a data-scroll-link href="#installation">Installation</a>
+            <a data-scroll-link href="#quick-start">Quick start</a>
+
+            <h3>The TUI</h3>
+            <a data-scroll-link href="#tui-layout">Layout &amp; focus</a>
+            <a data-scroll-link href="#notes">Working with notes</a>
+            <a data-scroll-link href="#search">Search &amp; views</a>
+            <a data-scroll-link href="#keys">Key bindings</a>
+            <a data-scroll-link href="#configuration">Configuration</a>
+            <a data-scroll-link href="#themes">Themes</a>
+
+            <h3>Automation</h3>
+            <a data-scroll-link href="#cli">CLI</a>
+            <a data-scroll-link href="#agent-memory">Agent memory</a>
+            <a data-scroll-link href="#memory-codex">Codex</a>
+            <a data-scroll-link href="#memory-claude">Claude Code</a>
+            <a data-scroll-link href="#memory-opencode">OpenCode</a>
+            <a data-scroll-link href="#memory-verify">Verify memory</a>
+
+            <h3>Project</h3>
+            <a data-scroll-link href="#development">Development</a>
+          </nav>
+          <p class="docs-tree-status"><strong>16 documents</strong><br>complete reference<br>plain HTML</p>
+        </div>
+      </div>
+    </aside>
+
+    <main id="main" class="docs-workspace">
+      <div class="docs-workspace-bar" aria-hidden="true">
+        <span>jotmd / docs / reference</span>
+        <strong>requirements.md</strong>
+      </div>
+
+      <article class="docs-content">
+        <header class="docs-intro">
+          <div class="docs-intro-copy">
+            <a class="docs-back" href="index.html">← Back to JotMD</a>
+            <p class="docs-kicker">README.md / complete reference</p>
+            <h1>Documentation</h1>
+            <p class="docs-lead">Install JotMD, learn the keyboard-first terminal workflow, configure your vault, automate safe note updates, and give supported coding agents durable Markdown memory.</p>
+          </div>
+        </header>
+
+      <section id="requirements" data-scroll-section>
+        <h2>Requirements</h2>
+        <p>The Homebrew package is the shortest path on macOS or Linux. Building from source requires Go 1.26 or newer and <a href="https://just.systems/">just</a>.</p>
+        <p>JotMD opens notes in the editor chosen by <code>--editor</code>, then <code>$JOTMD_EDITOR</code>, configuration, <code>$EDITOR</code>, and finally <code>vi</code>.</p>
+      </section>
+
+      <section id="installation" data-scroll-section>
+        <h2>Installation</h2>
+        <h3>Homebrew</h3>
+        <div class="code-block">
+          <pre><code>brew install gonfff/tap/jotmd</code></pre>
+          <button type="button" data-copy="brew install gonfff/tap/jotmd" aria-label="Copy command">Copy</button>
+        </div>
+
+        <h3>Build from source</h3>
+        <div class="code-block">
+          <pre><code>git clone https://github.com/gonfff/jotmd.git
+cd jotmd
+just install</code></pre>
+        </div>
+        <p><code>just install</code> writes the binary to <code>~/.local/bin/jotmd</code>.</p>
+      </section>
+
+      <section id="quick-start" data-scroll-section>
+        <h2>Quick start</h2>
+        <p>Run JotMD once. On first launch it asks where your notes live, creates the directory if needed, and stores the choice in the JotMD configuration directory.</p>
+        <div class="code-block">
+          <pre><code>jotmd</code></pre>
+          <button type="button" data-copy="jotmd" aria-label="Copy command">Copy</button>
+        </div>
+        <p>To skip the prompt, create a vault and pass it explicitly:</p>
+        <div class="code-block">
+          <pre><code>mkdir -p ~/vault
+jotmd --notes-dir ~/vault</code></pre>
+        </div>
+      </section>
+
+      <section id="tui-layout" data-scroll-section>
+        <h2>Layout &amp; focus</h2>
+        <p>The main screen keeps a directory tree beside a wrapping Markdown preview. Select a Markdown file to render it; expand directories in place and press <kbd>Tab</kbd> to move focus between the tree, table of contents, and preview.</p>
+        <p>The bottom status line shows the current note and context-sensitive help. Press <kbd>?</kbd> to see all effective bindings or <kbd>Shift+P</kbd> to open the command palette.</p>
+      </section>
+
+      <section id="notes" data-scroll-section>
+        <h2>Working with notes</h2>
+        <p>JotMD works directly with directories and <code>.md</code> files. There is no database or import format, so Git, sync tools, scripts, and other editors can use the same vault.</p>
+        <ul>
+          <li>Create notes and directories with <kbd>n</kbd> and <kbd>N</kbd>.</li>
+          <li>Edit the selected note with <kbd>e</kbd>.</li>
+          <li>Rename, copy, move, trash, restore, or permanently delete items through the command palette.</li>
+          <li>Reload notes, configuration, and key bindings without restarting the TUI.</li>
+        </ul>
+        <div class="callout warning">
+          <p><strong>Permanent deletion cannot be undone.</strong> Prefer the trash action unless the file must be removed immediately.</p>
+        </div>
+      </section>
+
+      <section id="search" data-scroll-section>
+        <h2>Search &amp; views</h2>
+        <p>Press <kbd>/</kbd> to search note names and contents. Results retain the live preview, so you can evaluate matches without leaving the search flow.</p>
+        <p>Markdown headers appear in a table of contents. Use <kbd>Tab</kbd> to focus it and jump between sections. A raw view is also available when you need the underlying Markdown rather than the rendered preview.</p>
+      </section>
+
+      <section id="keys" data-scroll-section>
+        <h2>Key bindings</h2>
+        <table>
+          <thead><tr><th>Context</th><th>Key</th><th>Action</th><th>Config key</th></tr></thead>
+          <tbody>
+            <tr><td>Tree</td><td><kbd>k</kbd> / <kbd>↑</kbd></td><td>Move up</td><td><code>tree.up</code></td></tr>
+            <tr><td>Tree</td><td><kbd>j</kbd> / <kbd>↓</kbd></td><td>Move down</td><td><code>tree.down</code></td></tr>
+            <tr><td>Tree</td><td><kbd>Home</kbd></td><td>Jump to first item</td><td><code>tree.first</code></td></tr>
+            <tr><td>Tree</td><td><kbd>End</kbd></td><td>Jump to last item</td><td><code>tree.last</code></td></tr>
+            <tr><td>Tree</td><td><kbd>h</kbd> / <kbd>←</kbd></td><td>Collapse directory</td><td><code>tree.collapse</code></td></tr>
+            <tr><td>Tree</td><td><kbd>l</kbd> / <kbd>→</kbd></td><td>Expand directory</td><td><code>tree.expand</code></td></tr>
+            <tr><td>Tree</td><td><kbd>Backspace</kbd></td><td>Go to parent directory</td><td><code>tree.parent</code></td></tr>
+            <tr><td>Tree</td><td><kbd>Enter</kbd> / <kbd>Space</kbd></td><td>Open note or toggle directory</td><td><code>tree.open</code></td></tr>
+            <tr><td>Notes</td><td><kbd>e</kbd></td><td>Edit selected note</td><td><code>note.edit</code></td></tr>
+            <tr><td>Notes</td><td><kbd>n</kbd></td><td>Create note</td><td><code>note.new</code></td></tr>
+            <tr><td>Notes</td><td><kbd>N</kbd></td><td>Create directory</td><td><code>directory.new</code></td></tr>
+            <tr><td>Notes</td><td><kbd>r</kbd></td><td>Rename selected item</td><td><code>note.rename</code></td></tr>
+            <tr><td>Notes</td><td><kbd>c</kbd></td><td>Copy selected item</td><td><code>note.copy</code></td></tr>
+            <tr><td>Notes</td><td><kbd>m</kbd></td><td>Move selected item</td><td><code>note.move</code></td></tr>
+            <tr><td>Notes</td><td><kbd>d</kbd></td><td>Move selected item to trash</td><td><code>note.trash</code></td></tr>
+            <tr><td>Notes</td><td><kbd>D</kbd></td><td>Permanently delete selected item</td><td><code>note.delete</code></td></tr>
+            <tr><td>Application</td><td><kbd>Tab</kbd></td><td>Cycle focus</td><td><code>app.focus</code></td></tr>
+            <tr><td>Application</td><td><kbd>R</kbd></td><td>Reload notes, configuration, and key bindings</td><td><code>app.reload</code></td></tr>
+            <tr><td>Application</td><td><kbd>?</kbd></td><td>Open help</td><td><code>app.help</code></td></tr>
+            <tr><td>Application</td><td><kbd>t</kbd></td><td>Open theme selector</td><td><code>theme.select</code></td></tr>
+            <tr><td>Application</td><td><kbd>/</kbd></td><td>Open search</td><td><code>search.open</code></td></tr>
+            <tr><td>Application</td><td><kbd>Shift+P</kbd></td><td>Open command palette</td><td><code>app.palette</code></td></tr>
+            <tr><td>Preview</td><td><kbd>v</kbd></td><td>Toggle rendered and raw Markdown</td><td><code>preview.raw</code></td></tr>
+            <tr><td>Preview</td><td><kbd>w</kbd></td><td>Toggle line wrapping</td><td><code>preview.wrap</code></td></tr>
+            <tr><td>Preview</td><td><kbd>s</kbd></td><td>Cycle render style</td><td><code>preview.style</code></td></tr>
+            <tr><td>Application</td><td><kbd>a</kbd></td><td>Show or hide agent memory</td><td><code>view.agent_memory</code></td></tr>
+            <tr><td>Application</td><td><kbd>q</kbd></td><td>Quit</td><td><code>app.quit</code></td></tr>
+            <tr><td>Help</td><td><kbd>Esc</kbd></td><td>Close help</td><td><code>help.close</code></td></tr>
+            <tr><td>Theme selector</td><td><kbd>↑</kbd> / <kbd>Ctrl+P</kbd></td><td>Previous theme</td><td><code>theme.up</code></td></tr>
+            <tr><td>Theme selector</td><td><kbd>↓</kbd> / <kbd>Ctrl+N</kbd></td><td>Next theme</td><td><code>theme.down</code></td></tr>
+            <tr><td>Theme selector</td><td><kbd>Enter</kbd></td><td>Apply theme</td><td><code>theme.apply</code></td></tr>
+            <tr><td>Theme selector</td><td><kbd>Esc</kbd></td><td>Close without applying</td><td><code>theme.close</code></td></tr>
+          </tbody>
+        </table>
+        <p>Bindings are configurable in <code>~/.config/jotmd/keybindings.toml</code>. Each entry replaces the defaults for that action. Print the effective bindings with:</p>
+        <div class="code-block">
+          <pre><code>jotmd --dump-keys</code></pre>
+          <button type="button" data-copy="jotmd --dump-keys" aria-label="Copy command">Copy</button>
+        </div>
+      </section>
+
+      <section id="configuration" data-scroll-section>
+        <h2>Configuration</h2>
+        <p>CLI flags override environment variables, which override <code>config.toml</code> and built-in defaults. Configuration lives under <code>~/.config/jotmd/</code>, or <code>$XDG_CONFIG_HOME/jotmd/</code> when that variable is set.</p>
+        <table>
+          <thead><tr><th><code>config.toml</code></th><th>CLI flag</th><th>Environment</th><th>Default</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>notes_dir</code></td><td><code>--notes-dir PATH</code></td><td><code>JOTMD_NOTES_DIR</code></td><td><code>~/vault</code></td><td>Directory containing the Markdown vault.</td></tr>
+            <tr><td><code>editor</code></td><td><code>--editor COMMAND</code></td><td><code>JOTMD_EDITOR</code>, <code>EDITOR</code> (fallback)</td><td><code>vi</code></td><td>Command used to edit notes.</td></tr>
+            <tr><td><code>theme</code></td><td><code>--theme NAME</code></td><td><code>JOTMD_THEME</code></td><td><code>jotmd</code></td><td>Bundled or custom theme name.</td></tr>
+            <tr><td><code>theme_colors</code></td><td><code>--theme-colors COLORS</code></td><td><code>JOTMD_THEME_COLORS</code></td><td>—</td><td>Overrides individual semantic colors in the active theme.</td></tr>
+            <tr><td><code>tree_width</code></td><td><code>--tree-width PERCENT</code></td><td><code>JOTMD_TREE_WIDTH</code></td><td><code>20</code></td><td>Tree width percentage from 1 to 100; the rendered pane is clamped to 24–48 columns.</td></tr>
+            <tr><td><code>no_color</code></td><td><code>--no-color</code></td><td><code>JOTMD_NO_COLOR</code>, <code>NO_COLOR</code></td><td><code>false</code></td><td>Disables color output. Any non-empty <code>NO_COLOR</code> also enables it.</td></tr>
+            <tr><td><code>show_hidden</code></td><td><code>--show-hidden</code></td><td><code>JOTMD_SHOW_HIDDEN</code></td><td><code>false</code></td><td>Includes hidden files and directories.</td></tr>
+            <tr><td><code>show_agent_memory</code></td><td><code>--show-agent-memory</code></td><td><code>JOTMD_SHOW_AGENT_MEMORY</code></td><td><code>false</code></td><td>Shows the reserved agent-memory tree at startup.</td></tr>
+            <tr><td><code>ignore</code></td><td><code>--ignore LIST</code></td><td><code>JOTMD_IGNORE</code></td><td><code>[".obsidian", ".git"]</code></td><td>Names excluded from the vault tree. CLI and environment values use the OS path-list separator.</td></tr>
+            <tr><td><code>sort</code></td><td><code>--sort ORDER</code></td><td><code>JOTMD_SORT</code></td><td><code>name</code></td><td>Sort order. Currently only name sorting is supported.</td></tr>
+            <tr><td><code>directories_first</code></td><td><code>--directories-first</code></td><td><code>JOTMD_DIRECTORIES_FIRST</code></td><td><code>true</code></td><td>Keeps directories before notes; currently must remain enabled.</td></tr>
+            <tr><td><code>status_bar</code></td><td><code>--status-bar</code></td><td><code>JOTMD_STATUS_BAR</code></td><td><code>true</code></td><td>Shows the bottom status bar.</td></tr>
+            <tr><td><code>watch</code></td><td><code>--watch</code></td><td><code>JOTMD_WATCH</code></td><td><code>true</code></td><td>Reloads the vault when files change on disk.</td></tr>
+            <tr><td><code>preview.wrap</code></td><td><code>--preview-wrap</code></td><td><code>JOTMD_PREVIEW_WRAP</code></td><td><code>true</code></td><td>Wraps long lines in the preview.</td></tr>
+            <tr><td><code>preview.render_style</code></td><td><code>--preview-render-style STYLE</code></td><td><code>JOTMD_PREVIEW_RENDER_STYLE</code></td><td><code>quiet</code></td><td>Markdown style: <code>quiet</code>, <code>surface</code>, or <code>structural</code>.</td></tr>
+            <tr><td><code>preview.max_bytes</code></td><td><code>--preview-max-bytes BYTES</code></td><td><code>JOTMD_PREVIEW_MAX_BYTES</code></td><td><code>2097152</code></td><td>Largest note rendered in preview, up to 67108864 bytes.</td></tr>
+          </tbody>
+        </table>
+        <p>Boolean environment values accept forms such as <code>true</code>/<code>false</code> and <code>1</code>/<code>0</code>; boolean CLI flags also accept explicit values such as <code>--watch=false</code>. Theme color overrides use a TOML inline table such as <code>{ accent = "#77AD91" }</code>. Generate templates, inspect the effective result, or validate a file with:</p>
+        <div class="code-block">
+          <pre><code>jotmd --init-config
+jotmd --dump-config
+jotmd config check
+jotmd config check /path/to/config.toml</code></pre>
+        </div>
+      </section>
+
+      <section id="themes" data-scroll-section>
+        <h2>Themes</h2>
+        <p>JotMD ships with 11 themes. Press <kbd>t</kbd> in the TUI to select one, or set <code>theme</code> in <code>config.toml</code>.</p>
+        <h3>Use a bundled theme</h3>
+        <div class="code-block">
+          <pre><code>jotmd --list-themes
+jotmd --theme catppuccin-mocha</code></pre>
+        </div>
+        <h3>Create a custom theme</h3>
+        <p>Export the bundled themes, copy one, and edit it. Existing files are never overwritten by <code>--init-themes</code>. The filename becomes the theme name used by <code>--theme</code>.</p>
+        <div class="code-block">
+          <pre><code>jotmd --init-themes
+cp ~/.config/jotmd/themes/jotmd.toml \
+  ~/.config/jotmd/themes/my-theme.toml</code></pre>
+        </div>
+        <p>If <code>XDG_CONFIG_HOME</code> is set, use <code>$XDG_CONFIG_HOME/jotmd/themes/</code> instead. A complete theme defines its Markdown syntax style and every semantic palette color:</p>
+        <div class="code-block">
+          <pre><code>name = "my-theme"
+syntax_style = "rose-pine"
+
+[palette]
+foreground = "#E9E2D5"
+muted = "#6E6E6B"
+border = "#45504A"
+border_focus = "#77AD91"
+selection_background = "#77AD91"
+selection_foreground = "#101512"
+accent = "#77AD91"
+directory = "#E1B866"
+heading = "#E1B866"
+link = "#7FA8B8"
+code = "#D88762"
+status = "#77AD91"</code></pre>
+        </div>
+        <p><code>background</code> is optional. Colors use hexadecimal notation. Unknown fields, missing required colors, and unsupported syntax styles are rejected.</p>
+        <div class="code-block">
+          <pre><code>jotmd --dump-theme my-theme
+jotmd --theme my-theme</code></pre>
+        </div>
+        <h3>Override a few colors</h3>
+        <p>For a small adjustment, keep the base theme and override only selected semantic colors in <code>config.toml</code>:</p>
+        <div class="code-block">
+          <pre><code>theme = "jotmd"
+theme_colors = { accent = "#CBA6F7", heading = "#F9E2AF" }</code></pre>
+        </div>
+      </section>
+
+      <span id="agent-cli" class="anchor-alias" aria-hidden="true"></span>
+      <section id="cli" data-scroll-section>
+        <h2>CLI</h2>
+        <p>The CLI can launch the TUI, inspect configuration, manage themes, or work with notes non-interactively while Markdown files remain the source of truth.</p>
+        <h3>General commands</h3>
+        <table>
+          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>jotmd</code></td><td>Open the interactive TUI.</td></tr>
+            <tr><td><code>jotmd --help</code></td><td>Print command and option help.</td></tr>
+            <tr><td><code>jotmd --version</code></td><td>Print the installed version.</td></tr>
+            <tr><td><code>jotmd --init-config</code></td><td>Create missing configuration and key-binding templates.</td></tr>
+            <tr><td><code>jotmd --init-themes</code></td><td>Export missing bundled themes for customization.</td></tr>
+            <tr><td><code>jotmd --list-themes</code></td><td>List available bundled and custom themes.</td></tr>
+            <tr><td><code>jotmd --dump-theme NAME</code></td><td>Print one effective theme as TOML.</td></tr>
+            <tr><td><code>jotmd --dump-config</code></td><td>Print the effective configuration.</td></tr>
+            <tr><td><code>jotmd --dump-keys</code></td><td>Print the effective key bindings.</td></tr>
+            <tr><td><code>jotmd config check [PATH]</code></td><td>Validate configuration, key bindings, editor, and theme.</td></tr>
+          </tbody>
+        </table>
+        <h3>Note commands</h3>
+        <div class="code-block">
+          <pre><code>jotmd [--notes-dir PATH] search [--limit N] QUERY [--json]
+jotmd [--notes-dir PATH] get PATH [--json]
+jotmd [--notes-dir PATH] write [--if-revision REVISION] PATH [--json]
+jotmd [--notes-dir PATH] delete --if-revision REVISION PATH [--json]</code></pre>
+        </div>
+
+        <table>
+          <thead><tr><th>Command</th><th>What it does</th><th>Options</th></tr></thead>
+          <tbody>
+            <tr><td><code>search QUERY</code></td><td>Search note paths and contents.</td><td><code>--limit N</code> accepts 1–200 and defaults to 20; <code>--json</code> returns structured results.</td></tr>
+            <tr><td><code>get PATH</code></td><td>Read an exact note and its revision.</td><td><code>--json</code> returns content and metadata.</td></tr>
+            <tr><td><code>write PATH</code></td><td>Read content from stdin and create or update a note.</td><td>Existing notes require <code>--if-revision REVISION</code>; <code>--json</code> returns metadata.</td></tr>
+            <tr><td><code>delete PATH</code></td><td>Permanently delete one note.</td><td><code>--if-revision REVISION</code> is required; <code>--json</code> returns metadata.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Safe updates</h3>
+        <p><code>write</code> without <code>--if-revision</code> creates a missing note and refuses to overwrite an existing one. To update safely, read the current revision and send it back:</p>
+        <div class="code-block">
+          <pre><code>jotmd --notes-dir ./notes search "refresh token redis" --json
+jotmd --notes-dir ./notes get projects/foo/pitfalls.md --json &gt; /tmp/note.json
+jq -rj '.content' /tmp/note.json &gt; /tmp/note.md
+revision=$(jq -r '.revision' /tmp/note.json)
+
+# Edit /tmp/note.md, then update only if the note is unchanged.
+jotmd --notes-dir ./notes write projects/foo/pitfalls.md \
+  --if-revision "$revision" &lt; /tmp/note.md</code></pre>
+        </div>
+        <p><code>delete</code> applies the same revision check and permanently removes one note. With <code>--json</code>, successes use stdout and errors use stderr.</p>
+      </section>
+
+      <section id="agent-memory" data-scroll-section>
+        <h2>Agent memory</h2>
+        <p>The optional <code>jot-memory</code> skill lets Codex, Claude Code, and OpenCode recall and maintain durable Markdown notes through the JotMD CLI. The agent decides when substantial work needs recall and whether its result is useful enough to preserve.</p>
+
+        <div class="agent-tabs" aria-label="Supported coding agents">
+          <div class="agent-tab"><strong>Codex</strong><span>Personal marketplace plugin</span></div>
+          <div class="agent-tab"><strong>Claude Code</strong><span>Marketplace plugin</span></div>
+          <div class="agent-tab"><strong>OpenCode</strong><span>Global linked skill</span></div>
+        </div>
+
+        <h3>Prerequisite</h3>
+        <p>Install JotMD, confirm it is on <code>PATH</code>, and run it once to select the vault used by both the TUI and agents:</p>
+        <div class="code-block">
+          <pre><code>brew install gonfff/tap/jotmd
+command -v jotmd
+jotmd</code></pre>
+        </div>
+        <p>Agent-managed notes live below a reserved top-level directory:</p>
+        <div class="code-block">
+          <pre><code>agent-memory/
+├── global/
+└── projects/&lt;project-id&gt;/</code></pre>
+        </div>
+        <div class="callout warning">
+          <p><strong>Reserved directory.</strong> Before enabling the integration, move unrelated user content out of <code>agent-memory/</code> or explicitly adopt it as agent-managed memory. Case variants are rejected.</p>
+        </div>
+        <p>JotMD hides this tree by default. Press <kbd>a</kbd> to show or hide it, or set <code>show_agent_memory = true</code> in <code>config.toml</code> to show it at startup.</p>
+      </section>
+
+      <section id="memory-codex" data-scroll-section>
+        <h2>Agent memory: Codex</h2>
+        <h3>Install</h3>
+        <div class="code-block">
+          <pre><code>codex plugin marketplace add gonfff/jotmd
+codex plugin add jot-memory@jotmd</code></pre>
+        </div>
+        <p>Start a new Codex thread so the skill is loaded. Use <code>codex plugin list</code> to inspect the configured marketplace and plugin.</p>
+
+        <h3>Update</h3>
+        <div class="code-block">
+          <pre><code>brew upgrade jotmd
+codex plugin marketplace upgrade jotmd
+codex plugin add jot-memory@jotmd</code></pre>
+        </div>
+
+        <h3>Remove</h3>
+        <div class="code-block">
+          <pre><code>codex plugin remove jot-memory@jotmd
+codex plugin marketplace remove jotmd</code></pre>
+        </div>
+      </section>
+
+      <section id="memory-claude" data-scroll-section>
+        <h2>Agent memory: Claude Code</h2>
+        <h3>Install</h3>
+        <div class="code-block">
+          <pre><code>claude plugin marketplace add gonfff/jotmd
+claude plugin install jot-memory@jotmd</code></pre>
+        </div>
+        <p>Restart Claude Code after installation or update. Use <code>claude plugin list</code> to verify the plugin.</p>
+
+        <h3>Update</h3>
+        <div class="code-block">
+          <pre><code>brew upgrade jotmd
+claude plugin marketplace update jotmd
+claude plugin update jot-memory@jotmd</code></pre>
+        </div>
+
+        <h3>Remove</h3>
+        <div class="code-block">
+          <pre><code>claude plugin uninstall jot-memory@jotmd
+claude plugin marketplace remove jotmd</code></pre>
+        </div>
+      </section>
+
+      <section id="memory-opencode" data-scroll-section>
+        <h2>Agent memory: OpenCode</h2>
+        <p>OpenCode discovers global skills under <code>~/.config/opencode/skills/&lt;name&gt;/SKILL.md</code>. Keep a shallow checkout and link the skill so updates remain one command.</p>
+        <h3>Install</h3>
+        <div class="code-block">
+          <pre><code>git clone --depth 1 https://github.com/gonfff/jotmd.git ~/.local/share/jotmd
+mkdir -p ~/.config/opencode/skills
+ln -s ~/.local/share/jotmd/skills/jot-memory \
+  ~/.config/opencode/skills/jot-memory</code></pre>
+        </div>
+
+        <h3>Update</h3>
+        <div class="code-block">
+          <pre><code>brew upgrade jotmd
+git -C ~/.local/share/jotmd pull --ff-only</code></pre>
+        </div>
+
+        <h3>Remove</h3>
+        <div class="code-block">
+          <pre><code>unlink ~/.config/opencode/skills/jot-memory</code></pre>
+        </div>
+        <p>Restart OpenCode after installation or update.</p>
+      </section>
+
+      <section id="memory-verify" data-scroll-section>
+        <h2>Verify agent memory</h2>
+        <p>Start a new agent session in a Git repository and ask it to perform substantial research or implementation. The agent should consider memory before the work and report every memory note it changes afterward. Trivial requests intentionally skip memory.</p>
+        <p>Memory is ordinary Markdown: you can inspect and edit it directly, and JotMD can reveal it in the same vault when needed.</p>
+      </section>
+
+      <section id="development" data-scroll-section>
+        <h2>Development</h2>
+        <div class="code-block">
+          <pre><code>just run       # run from the checkout
+just build     # build bin/jotmd
+just test      # run tests
+just check     # format check, vet, and tests</code></pre>
+        </div>
+        <p>Source code, releases, and issue tracking live on <a href="https://github.com/gonfff/jotmd">GitHub</a>. JotMD is distributed under the <a href="https://github.com/gonfff/jotmd/blob/master/LICENSE">MIT License</a>.</p>
+      </section>
+      </article>
+    </main>
+  </div>
+
+  <script src="site.js"></script>
+</body>
+</html>

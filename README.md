@@ -3,7 +3,7 @@
 Keyboard-first Markdown notes for the terminal. Browse plain files, search your
 vault, and preview Markdown without leaving the command line.
 
-![jotmd browsing a Markdown vault](docs/images/jotmd.png)
+![jotmd browsing a Markdown vault](site/assets/jotmd.png)
 
 ## Install
 
