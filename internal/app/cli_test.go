@@ -65,6 +65,18 @@ func TestParseCLIInvocationLeavesLegacyArgumentsAlone(t *testing.T) {
 	}
 }
 
+func TestParseCLIInvocationSkipsTUIOptionValuesNamedLikeCommands(t *testing.T) {
+	for _, option := range []string{
+		"--notes-dir", "--editor", "--theme", "--theme-colors", "--tree-width",
+		"--ignore", "--sort", "--preview-max-bytes", "--preview-render-style", "--dump-theme",
+	} {
+		args := []string{option, "search", "--dump-config"}
+		if got, handled, err := parseCLIInvocation(args); err != nil || handled {
+			t.Errorf("parseCLIInvocation(%q) = (%#v, %v, %v), want TUI invocation", args, got, handled, err)
+		}
+	}
+}
+
 func TestParseCLIInvocationRejectsInvalidArguments(t *testing.T) {
 	tests := []struct {
 		name string
@@ -512,6 +524,15 @@ func TestRunRootHelpListsOnlyImplementedCLICommands(t *testing.T) {
 	for _, command := range []string{"search", "get", "write", "delete"} {
 		if !strings.Contains(stdout.String(), "jotmd [--notes-dir PATH] "+command) {
 			t.Errorf("root help does not list %s: %q", command, stdout.String())
+		}
+	}
+	for _, option := range []string{
+		"--notes-dir", "--editor", "--theme", "--theme-colors", "--tree-width", "--no-color",
+		"--show-hidden", "--show-agent-memory", "--ignore", "--sort", "--directories-first",
+		"--status-bar", "--watch", "--preview-wrap", "--preview-max-bytes", "--preview-render-style",
+	} {
+		if !strings.Contains(stdout.String(), option) {
+			t.Errorf("root help does not list %s: %q", option, stdout.String())
 		}
 	}
 	for _, excluded := range []string{" create ", " list ", " context ", "--permanent", "fuzzy"} {

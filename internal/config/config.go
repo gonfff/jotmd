@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/gonfff/jotmd/internal/notes"
 )
 
@@ -47,10 +48,10 @@ type Partial struct {
 	DirectoriesFirst *bool              `toml:"directories_first"`
 	StatusBar        *bool              `toml:"status_bar"`
 	Watch            *bool              `toml:"watch"`
-	Preview          *partialPreview    `toml:"preview"`
+	Preview          *PartialPreview    `toml:"preview"`
 }
 
-type partialPreview struct {
+type PartialPreview struct {
 	Wrap        *bool   `toml:"wrap"`
 	MaxBytes    *int64  `toml:"max_bytes"`
 	RenderStyle *string `toml:"render_style"`
@@ -87,6 +88,20 @@ func ApplyEnv(base Config, lookupEnv func(string) (string, bool)) (Config, error
 	if theme, ok := lookupEnv("JOTMD_THEME"); ok {
 		overlay.Theme = &theme
 	}
+	if value, ok := lookupEnv("JOTMD_THEME_COLORS"); ok {
+		colors, err := ParseThemeColors(value)
+		if err != nil {
+			return Config{}, fmt.Errorf("parse JOTMD_THEME_COLORS: %w", err)
+		}
+		overlay.ThemeColors = &colors
+	}
+	if value, ok := lookupEnv("JOTMD_TREE_WIDTH"); ok {
+		parsed, err := strconv.Atoi(value)
+		if err != nil {
+			return Config{}, fmt.Errorf("parse JOTMD_TREE_WIDTH: %w", err)
+		}
+		overlay.TreeWidth = &parsed
+	}
 	if value, ok := lookupEnv("JOTMD_NO_COLOR"); ok {
 		parsed, err := envBool("JOTMD_NO_COLOR", value)
 		if err != nil {
@@ -101,9 +116,29 @@ func ApplyEnv(base Config, lookupEnv func(string) (string, bool)) (Config, error
 		}
 		overlay.ShowHidden = &parsed
 	}
+	if value, ok := lookupEnv("JOTMD_SHOW_AGENT_MEMORY"); ok {
+		parsed, err := envBool("JOTMD_SHOW_AGENT_MEMORY", value)
+		if err != nil {
+			return Config{}, err
+		}
+		overlay.ShowAgentMemory = &parsed
+	}
 	if value, ok := lookupEnv("JOTMD_IGNORE"); ok {
-		ignore := strings.Split(value, string(filepath.ListSeparator))
+		var ignore []string
+		if value != "" {
+			ignore = strings.Split(value, string(filepath.ListSeparator))
+		}
 		overlay.Ignore = &ignore
+	}
+	if value, ok := lookupEnv("JOTMD_SORT"); ok {
+		overlay.Sort = &value
+	}
+	if value, ok := lookupEnv("JOTMD_DIRECTORIES_FIRST"); ok {
+		parsed, err := envBool("JOTMD_DIRECTORIES_FIRST", value)
+		if err != nil {
+			return Config{}, err
+		}
+		overlay.DirectoriesFirst = &parsed
 	}
 	if value, ok := lookupEnv("JOTMD_STATUS_BAR"); ok {
 		parsed, err := envBool("JOTMD_STATUS_BAR", value)
@@ -124,7 +159,7 @@ func ApplyEnv(base Config, lookupEnv func(string) (string, bool)) (Config, error
 		if err != nil {
 			return Config{}, err
 		}
-		overlay.Preview = &partialPreview{Wrap: &parsed}
+		overlay.Preview = &PartialPreview{Wrap: &parsed}
 	}
 	if value, ok := lookupEnv("JOTMD_PREVIEW_MAX_BYTES"); ok {
 		parsed, err := strconv.ParseInt(value, 10, 64)
@@ -135,7 +170,7 @@ func ApplyEnv(base Config, lookupEnv func(string) (string, bool)) (Config, error
 			return Config{}, errors.New("JOTMD_PREVIEW_MAX_BYTES must be positive")
 		}
 		if overlay.Preview == nil {
-			overlay.Preview = &partialPreview{}
+			overlay.Preview = &PartialPreview{}
 		}
 		overlay.Preview.MaxBytes = &parsed
 	}
@@ -144,7 +179,7 @@ func ApplyEnv(base Config, lookupEnv func(string) (string, bool)) (Config, error
 			return Config{}, errors.New("JOTMD_PREVIEW_RENDER_STYLE must be quiet, surface, or structural")
 		}
 		if overlay.Preview == nil {
-			overlay.Preview = &partialPreview{}
+			overlay.Preview = &PartialPreview{}
 		}
 		overlay.Preview.RenderStyle = &value
 	}
@@ -153,6 +188,26 @@ func ApplyEnv(base Config, lookupEnv func(string) (string, bool)) (Config, error
 		base.NoColor = true
 	}
 	return base, nil
+}
+
+func ParseThemeColors(value string) (map[string]string, error) {
+	if value == "" {
+		return map[string]string{}, nil
+	}
+	var parsed struct {
+		ThemeColors map[string]string `toml:"theme_colors"`
+	}
+	metadata, err := toml.Decode("theme_colors = "+value, &parsed)
+	if err != nil {
+		return nil, err
+	}
+	if unknown := metadata.Undecoded(); len(unknown) != 0 {
+		return nil, fmt.Errorf("unexpected field %s", unknown[0])
+	}
+	if parsed.ThemeColors == nil {
+		return nil, errors.New("theme colors must be a TOML inline table")
+	}
+	return parsed.ThemeColors, nil
 }
 
 func envBool(name, value string) (bool, error) {
@@ -193,7 +248,7 @@ func Merge(base Config, overlay Partial) Config {
 		base.ShowAgentMemory = *overlay.ShowAgentMemory
 	}
 	if overlay.Ignore != nil {
-		base.Ignore = append([]string(nil), (*overlay.Ignore)...)
+		base.Ignore = append([]string{}, (*overlay.Ignore)...)
 	}
 	if overlay.Sort != nil {
 		base.Sort = *overlay.Sort

@@ -19,9 +19,18 @@ type Command struct {
 func Resolve(flagValue string, configured []string) (Command, error) {
 	var parts []string
 	var err error
+	jotmdEditor, jotmdEditorSet := os.LookupEnv("JOTMD_EDITOR")
 	switch {
 	case flagValue != "":
 		parts, err = split(flagValue)
+	case jotmdEditorSet:
+		parts, err = split(jotmdEditor)
+		if err != nil {
+			return Command{}, fmt.Errorf("parse JOTMD_EDITOR: %w", err)
+		}
+		if len(parts) == 0 || parts[0] == "" {
+			return Command{}, errors.New("JOTMD_EDITOR must contain a non-empty executable")
+		}
 	case len(configured) != 0:
 		parts = append([]string(nil), configured...)
 	case os.Getenv("EDITOR") != "":

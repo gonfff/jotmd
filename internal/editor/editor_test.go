@@ -111,6 +111,44 @@ func TestResolveUsesEnvironmentUnlessConfigured(t *testing.T) {
 	}
 }
 
+func TestResolveUsesJotMDEnvironmentBetweenFlagAndConfiguration(t *testing.T) {
+	executable, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("JOTMD_EDITOR", executable+` --from-jotmd-env "two words"`)
+	t.Setenv("EDITOR", "editor-fallback-that-must-not-run")
+
+	got, err := Resolve("", []string{"configured-editor-that-must-not-run"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Executable != executable || !reflect.DeepEqual(got.Args, []string{"--from-jotmd-env", "two words"}) {
+		t.Fatalf("Resolve() = %#v, want JOTMD_EDITOR command", got)
+	}
+
+	got, err = Resolve(executable+" --from-flag", []string{"configured-editor-that-must-not-run"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Executable != executable || !reflect.DeepEqual(got.Args, []string{"--from-flag"}) {
+		t.Fatalf("Resolve(flag) = %#v, want CLI command", got)
+	}
+}
+
+func TestResolveRejectsEmptyJotMDEditor(t *testing.T) {
+	executable, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("JOTMD_EDITOR", "")
+
+	_, err = Resolve("", []string{executable})
+	if err == nil || !strings.Contains(err.Error(), "JOTMD_EDITOR") {
+		t.Fatalf("Resolve() error = %v, want empty JOTMD_EDITOR error", err)
+	}
+}
+
 func TestExecRunsEditorAndReportsExit(t *testing.T) {
 	executable, err := os.Executable()
 	if err != nil {

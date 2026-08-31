@@ -32,7 +32,8 @@ mkdir -p ~/vault
 jotmd --notes-dir ~/vault
 ```
 
-JotMD uses `--editor` or the configured editor, then `$EDITOR`, then `vi`.
+JotMD uses `--editor`, `$JOTMD_EDITOR`, the configured editor, `$EDITOR`, then
+`vi`.
 
 ## CLI
 
@@ -146,6 +147,32 @@ Key bindings are configurable in `~/.config/jotmd/keybindings.toml`. Run
 CLI flags override environment variables, which override `config.toml` and
 defaults. Configuration files are created automatically on first launch and
 document every setting.
+
+Every setting has the same three forms:
+
+| `config.toml` | Environment | CLI |
+| --- | --- | --- |
+| `notes_dir` | `JOTMD_NOTES_DIR` | `--notes-dir` |
+| `editor` | `JOTMD_EDITOR` | `--editor` |
+| `theme` | `JOTMD_THEME` | `--theme` |
+| `theme_colors` | `JOTMD_THEME_COLORS` | `--theme-colors` |
+| `tree_width` | `JOTMD_TREE_WIDTH` | `--tree-width` |
+| `no_color` | `JOTMD_NO_COLOR` or `NO_COLOR` | `--no-color` |
+| `show_hidden` | `JOTMD_SHOW_HIDDEN` | `--show-hidden` |
+| `show_agent_memory` | `JOTMD_SHOW_AGENT_MEMORY` | `--show-agent-memory` |
+| `ignore` | `JOTMD_IGNORE` | `--ignore` |
+| `sort` | `JOTMD_SORT` | `--sort` |
+| `directories_first` | `JOTMD_DIRECTORIES_FIRST` | `--directories-first` |
+| `status_bar` | `JOTMD_STATUS_BAR` | `--status-bar` |
+| `watch` | `JOTMD_WATCH` | `--watch` |
+| `preview.wrap` | `JOTMD_PREVIEW_WRAP` | `--preview-wrap` |
+| `preview.max_bytes` | `JOTMD_PREVIEW_MAX_BYTES` | `--preview-max-bytes` |
+| `preview.render_style` | `JOTMD_PREVIEW_RENDER_STYLE` | `--preview-render-style` |
+
+Boolean CLI overrides accept explicit values such as `--watch=false`.
+`theme_colors` environment and CLI values use a TOML inline table, for example
+`'{ accent = "#CBA6F7" }'`. `ignore` uses the operating system's path-list
+separator (`:` on Unix, `;` on Windows).
 
 Optional configuration commands:
 

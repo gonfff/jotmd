@@ -29,8 +29,13 @@ const (
   jotmd [--notes-dir PATH] delete --if-revision REVISION PATH [--json]
   jotmd config check [PATH]
 
-TUI options: --help --version --notes-dir --theme --editor --init-config
-             --init-themes --list-themes --dump-theme --dump-config --dump-keys
+TUI configuration options:
+  --notes-dir --editor --theme --theme-colors --tree-width --no-color
+  --show-hidden --show-agent-memory --ignore --sort --directories-first
+  --status-bar --watch --preview-wrap --preview-max-bytes --preview-render-style
+
+Other options: --help --version --init-config --init-themes --list-themes
+               --dump-theme --dump-config --dump-keys
 
 Run jotmd COMMAND --help for command details.
 `
@@ -502,8 +507,12 @@ func containsCLICommand(args []string) bool {
 		}
 		if options && strings.HasPrefix(argument, "-") {
 			name, _, hasValue := strings.Cut(argument, "=")
-			if !hasValue && (name == "--notes-dir" || name == "--limit" || name == "--if-revision") {
-				index++
+			if !hasValue {
+				switch name {
+				case "--notes-dir", "--editor", "--theme", "--theme-colors", "--tree-width", "--ignore", "--sort",
+					"--preview-max-bytes", "--preview-render-style", "--dump-theme", "--limit", "--if-revision":
+					index++
+				}
 			}
 			continue
 		}

@@ -268,19 +268,28 @@ func TestApplyEnvIgnoresEmptyNoColor(t *testing.T) {
 	}
 }
 
-func TestApplyEnvParsesImplementedSettings(t *testing.T) {
+func TestApplyEnvParsesEveryConfigurationSetting(t *testing.T) {
 	got, err := config.ApplyEnv(config.Defaults(), lookup(map[string]string{
+		"JOTMD_THEME_COLORS":         `{ accent = "#FFFFFF" }`,
+		"JOTMD_TREE_WIDTH":           "45",
+		"JOTMD_NO_COLOR":             "true",
 		"JOTMD_SHOW_HIDDEN":          "true",
+		"JOTMD_SHOW_AGENT_MEMORY":    "true",
+		"JOTMD_SORT":                 "name",
+		"JOTMD_DIRECTORIES_FIRST":    "true",
 		"JOTMD_STATUS_BAR":           "false",
+		"JOTMD_WATCH":                "false",
 		"JOTMD_PREVIEW_WRAP":         "false",
 		"JOTMD_PREVIEW_MAX_BYTES":    "4096",
 		"JOTMD_PREVIEW_RENDER_STYLE": "surface",
-		"JOTMD_IGNORE":               "tmp:vendor",
+		"JOTMD_IGNORE":               strings.Join([]string{"tmp", "vendor"}, string(filepath.ListSeparator)),
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !got.ShowHidden || got.StatusBar || got.Preview.Wrap || got.Preview.MaxBytes != 4096 || got.Preview.RenderStyle != "surface" || strings.Join(got.Ignore, ",") != "tmp,vendor" {
+	if got.ThemeColors["accent"] != "#FFFFFF" || got.TreeWidth != 45 || !got.NoColor || !got.ShowHidden || !got.ShowAgentMemory ||
+		got.Sort != "name" || !got.DirectoriesFirst || got.StatusBar || got.Watch || got.Preview.Wrap ||
+		got.Preview.MaxBytes != 4096 || got.Preview.RenderStyle != "surface" || strings.Join(got.Ignore, ",") != "tmp,vendor" {
 		t.Errorf("ApplyEnv() = %#v, want parsed environment settings", got)
 	}
 }
@@ -293,11 +302,34 @@ func TestApplyEnvIdentifiesInvalidSourceField(t *testing.T) {
 }
 
 func TestApplyEnvIdentifiesSemanticallyInvalidSourceField(t *testing.T) {
-	for name, value := range map[string]string{"JOTMD_PREVIEW_MAX_BYTES": "0", "JOTMD_PREVIEW_RENDER_STYLE": "unknown"} {
+	for name, value := range map[string]string{
+		"JOTMD_THEME_COLORS":         "not-a-table",
+		"JOTMD_PREVIEW_MAX_BYTES":    "0",
+		"JOTMD_PREVIEW_RENDER_STYLE": "unknown",
+	} {
 		_, err := config.ApplyEnv(config.Defaults(), lookup(map[string]string{name: value}))
 		if err == nil || !strings.Contains(err.Error(), name) {
 			t.Errorf("ApplyEnv(%s) error = %v, want source field", name, err)
 		}
+	}
+}
+
+func TestApplyEnvRejectsTrailingThemeColorFields(t *testing.T) {
+	_, err := config.ApplyEnv(config.Defaults(), lookup(map[string]string{
+		"JOTMD_THEME_COLORS": "{ accent = \"#FFFFFF\" }\nunknown = true",
+	}))
+	if err == nil || !strings.Contains(err.Error(), "JOTMD_THEME_COLORS") {
+		t.Fatalf("ApplyEnv() error = %v, want trailing JOTMD_THEME_COLORS field error", err)
+	}
+}
+
+func TestApplyEnvEmptyIgnoreClearsConfiguredNames(t *testing.T) {
+	got, err := config.ApplyEnv(config.Defaults(), lookup(map[string]string{"JOTMD_IGNORE": ""}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Ignore) != 0 {
+		t.Fatalf("ApplyEnv() Ignore = %#v, want empty", got.Ignore)
 	}
 }
 

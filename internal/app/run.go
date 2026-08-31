@@ -56,6 +56,19 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	notesDir := flags.String("notes-dir", "", "override notes directory")
 	themeName := flags.String("theme", "", "override theme")
 	editorFlag := flags.String("editor", "", "override editor command")
+	themeColors := flags.String("theme-colors", "", "override theme colors as a TOML inline table")
+	treeWidth := flags.Int("tree-width", 0, "override tree width percentage")
+	noColor := flags.Bool("no-color", false, "override ANSI color usage")
+	showHidden := flags.Bool("show-hidden", false, "override hidden file visibility")
+	showAgentMemory := flags.Bool("show-agent-memory", false, "override agent memory visibility")
+	ignore := flags.String("ignore", "", "override ignored names separated by the OS list separator")
+	sortOrder := flags.String("sort", "", "override entry ordering")
+	directoriesFirst := flags.Bool("directories-first", false, "override directory ordering")
+	statusBar := flags.Bool("status-bar", false, "override status bar visibility")
+	watch := flags.Bool("watch", false, "override file watching")
+	previewWrap := flags.Bool("preview-wrap", false, "override preview wrapping")
+	previewMaxBytes := flags.Int64("preview-max-bytes", 0, "override maximum preview size")
+	previewRenderStyle := flags.String("preview-render-style", "", "override preview rendering style")
 	initConfig := flags.Bool("init-config", false, "create config and keybindings templates")
 	initThemes := flags.Bool("init-themes", false, "create missing bundled themes")
 	listThemes := flags.Bool("list-themes", false, "list available themes")
@@ -187,16 +200,63 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 		return reportError(stderr, err)
 	}
 	reloadOverrides := config.Partial{}
+	var overrideErr error
 	flags.Visit(func(flag *flag.Flag) {
 		switch flag.Name {
 		case "notes-dir":
-			cfg = config.Merge(cfg, config.Partial{NotesDir: notesDir})
 			reloadOverrides.NotesDir = notesDir
 		case "theme":
-			cfg = config.Merge(cfg, config.Partial{Theme: themeName})
 			reloadOverrides.Theme = themeName
+		case "theme-colors":
+			colors, err := config.ParseThemeColors(*themeColors)
+			if err != nil {
+				overrideErr = fmt.Errorf("parse --theme-colors: %w", err)
+				return
+			}
+			reloadOverrides.ThemeColors = &colors
+		case "tree-width":
+			reloadOverrides.TreeWidth = treeWidth
+		case "no-color":
+			reloadOverrides.NoColor = noColor
+		case "show-hidden":
+			reloadOverrides.ShowHidden = showHidden
+		case "show-agent-memory":
+			reloadOverrides.ShowAgentMemory = showAgentMemory
+		case "ignore":
+			var values []string
+			if *ignore != "" {
+				values = strings.Split(*ignore, string(filepath.ListSeparator))
+			}
+			reloadOverrides.Ignore = &values
+		case "sort":
+			reloadOverrides.Sort = sortOrder
+		case "directories-first":
+			reloadOverrides.DirectoriesFirst = directoriesFirst
+		case "status-bar":
+			reloadOverrides.StatusBar = statusBar
+		case "watch":
+			reloadOverrides.Watch = watch
+		case "preview-wrap":
+			if reloadOverrides.Preview == nil {
+				reloadOverrides.Preview = &config.PartialPreview{}
+			}
+			reloadOverrides.Preview.Wrap = previewWrap
+		case "preview-max-bytes":
+			if reloadOverrides.Preview == nil {
+				reloadOverrides.Preview = &config.PartialPreview{}
+			}
+			reloadOverrides.Preview.MaxBytes = previewMaxBytes
+		case "preview-render-style":
+			if reloadOverrides.Preview == nil {
+				reloadOverrides.Preview = &config.PartialPreview{}
+			}
+			reloadOverrides.Preview.RenderStyle = previewRenderStyle
 		}
 	})
+	if overrideErr != nil {
+		return reportError(stderr, overrideErr)
+	}
+	cfg = config.Merge(cfg, reloadOverrides)
 	if cfg, err = config.Finalize(cfg); err != nil {
 		return reportError(stderr, err)
 	}

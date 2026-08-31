@@ -200,6 +200,65 @@ func TestRunDumpConfigAppliesNotesDirFlag(t *testing.T) {
 	}
 }
 
+func TestRunDumpConfigAppliesEveryConfigurationFlag(t *testing.T) {
+	setExistingEditor(t)
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	gotCode := Run(context.Background(), []string{
+		"--theme-colors", `{ accent = "#FFFFFF" }`,
+		"--tree-width", "45",
+		"--no-color=false",
+		"--show-hidden=true",
+		"--show-agent-memory=true",
+		"--ignore", strings.Join([]string{"tmp", "vendor"}, string(filepath.ListSeparator)),
+		"--sort", "name",
+		"--directories-first=true",
+		"--status-bar=false",
+		"--watch=false",
+		"--preview-wrap=false",
+		"--preview-max-bytes", "4096",
+		"--preview-render-style", "surface",
+		"--dump-config",
+	}, strings.NewReader(""), &stdout, &stderr)
+
+	if gotCode != 0 {
+		t.Fatalf("Run() code = %d, want 0; stderr = %s", gotCode, stderr.String())
+	}
+	path := filepath.Join(t.TempDir(), "dump.toml")
+	writeConfig(t, path, stdout.String())
+	got, err := config.Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ThemeColors["accent"] != "#FFFFFF" || got.TreeWidth != 45 || got.NoColor || !got.ShowHidden || !got.ShowAgentMemory ||
+		!reflect.DeepEqual(got.Ignore, []string{"tmp", "vendor"}) || got.Sort != "name" || !got.DirectoriesFirst || got.StatusBar || got.Watch ||
+		got.Preview.Wrap || got.Preview.MaxBytes != 4096 || got.Preview.RenderStyle != "surface" {
+		t.Errorf("Run() dumped config = %#v, want CLI settings", got)
+	}
+}
+
+func TestRunDumpConfigEmptyIgnoreClearsConfiguredNames(t *testing.T) {
+	setExistingEditor(t)
+	configHome := t.TempDir()
+	writeConfig(t, filepath.Join(configHome, "jotmd", "config.toml"), `ignore = ["configured"]`)
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+
+	var stdout, stderr bytes.Buffer
+	if code := Run(context.Background(), []string{"--ignore=", "--dump-config"}, strings.NewReader(""), &stdout, &stderr); code != 0 {
+		t.Fatalf("Run() code = %d, want 0; stderr = %s", code, stderr.String())
+	}
+	path := filepath.Join(t.TempDir(), "dump.toml")
+	writeConfig(t, path, stdout.String())
+	got, err := config.Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Ignore) != 0 {
+		t.Fatalf("Run() dumped Ignore = %#v, want empty", got.Ignore)
+	}
+}
+
 func TestRunInitConfigCreatesTemplatesBeforeStartingTUI(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
