@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -80,14 +81,16 @@ func (m Model) popupSize() (int, int) {
 }
 
 func (m Model) popupContent(width, height int) string {
-	var content string
+	var content, title string
 	large := false
 	switch {
 	case m.help:
 		content = m.helpView(width, height)
+		title = "help"
 		large = true
 	case m.mode == CommandPalette:
 		content = m.paletteView(width, height)
+		title = fmt.Sprintf("commands (%d)", len(m.palette.items))
 		large = true
 	}
 	if content == "" {
@@ -103,7 +106,21 @@ func (m Model) popupContent(width, height int) string {
 	if large {
 		style = style.Width(width + 2).Height(height + 2)
 	}
-	return style.Render(restoreBackground(content, m.theme.Palette.Background))
+	popup := style.Render(restoreBackground(content, m.theme.Palette.Background))
+	if title == "" {
+		return popup
+	}
+	label := " " + ansi.Truncate(title, max(1, lipgloss.Width(popup)-4), "") + " "
+	label = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(m.theme.Palette.BorderFocus)).
+		Background(lipgloss.Color(m.theme.Palette.Background)).
+		Render(label)
+	canvas := lipgloss.NewCanvas(lipgloss.Width(popup), lipgloss.Height(popup))
+	canvas.Compose(lipgloss.NewCompositor(
+		lipgloss.NewLayer(popup),
+		lipgloss.NewLayer(label).X(max(0, (lipgloss.Width(popup)-lipgloss.Width(label))/2)).Z(1),
+	))
+	return canvas.Render()
 }
 
 func overlay(base, popup string, width, height int) string {

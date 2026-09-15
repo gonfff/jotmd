@@ -28,7 +28,13 @@ type paletteState struct {
 
 func (m *Model) openPalette() {
 	input := textinput.New()
-	input.Prompt = ": "
+	input.Prompt = "  "
+	input.Placeholder = "type to filter..."
+	styles := input.Styles()
+	styles.Focused.Text = lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Foreground))
+	styles.Focused.Placeholder = lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Muted))
+	styles.Focused.Prompt = lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Accent))
+	input.SetStyles(styles)
 	input.Focus()
 	m.palette = paletteState{origin: m.mode, input: input}
 	m.mode = CommandPalette
@@ -156,27 +162,53 @@ func (m Model) updatePalette(message tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) paletteView(width, height int) string {
-	lines := []string{"Commands", "", m.palette.input.View()}
-	available := max(1, height-len(lines)-2)
+	input := m.palette.input
+	input.SetWidth(max(1, width-2))
+	lines := []string{input.View(), ""}
+	available := max(1, height-len(lines)-1)
 	start := 0
 	if m.palette.selected >= available {
 		start = m.palette.selected - available + 1
 	}
+	foregroundStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Foreground))
+	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Muted))
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Heading))
+	selectionStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(m.theme.Palette.SelectionForeground)).
+		Background(lipgloss.Color(m.theme.Palette.SelectionBackground))
+	selectedKeyStyle := selectionStyle.Foreground(lipgloss.Color(m.theme.Palette.Heading))
 	for index := start; index < len(m.palette.items) && index < start+available; index++ {
 		item := m.palette.items[index]
-		line := "  " + item.binding.Label + "  " + strings.Join(item.binding.Keys, "/")
+		label := item.binding.Label
 		if !item.enabled {
-			line += "  (" + item.reason + ")"
-			line = lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Muted)).Render(line)
+			label += " (" + item.reason + ")"
 		}
+		keys := strings.Join(item.binding.Keys, "/")
+		marker := "  "
 		if index == m.palette.selected {
-			line = lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.SelectionForeground)).Background(lipgloss.Color(m.theme.Palette.SelectionBackground)).Render("> " + strings.TrimPrefix(line, "  "))
+			marker = "> "
 		}
-		lines = append(lines, ansi.Truncate(line, width, ""))
+		keyColumn := min(max(4, width*2/3), max(4, width-ansi.StringWidth(keys)))
+		label = ansi.Truncate(label, max(0, keyColumn-ansi.StringWidth(marker)-2), "…")
+		prefix := marker + label
+		prefix += strings.Repeat(" ", max(2, keyColumn-ansi.StringWidth(prefix)))
+		trailing := strings.Repeat(" ", max(0, width-keyColumn-ansi.StringWidth(keys)))
+		var line string
+		switch {
+		case index == m.palette.selected:
+			line = selectionStyle.Render(prefix) + selectedKeyStyle.Render(keys) + selectionStyle.Render(trailing)
+		case !item.enabled:
+			line = mutedStyle.Render(prefix) + keyStyle.Render(keys) + mutedStyle.Render(trailing)
+		default:
+			line = foregroundStyle.Render(prefix) + keyStyle.Render(keys) + foregroundStyle.Render(trailing)
+		}
+		line = ansi.Truncate(line, width, "")
+		line += strings.Repeat(" ", max(0, width-ansi.StringWidth(line)))
+		lines = append(lines, line)
 	}
 	if len(m.palette.items) == 0 {
-		lines = append(lines, "No actions.")
+		lines = append(lines, mutedStyle.Render("  No actions."))
 	}
-	lines = append(lines, "", "Enter run  ↑/↓ navigate  Esc cancel")
-	return lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Accent)).Render(popupLines(lines, width, height))
+	lines = append(lines, mutedStyle.Render("Enter run  ↑/↓ navigate  Esc cancel"))
+	return popupLines(lines, width, height)
 }

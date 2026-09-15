@@ -5,9 +5,46 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/gonfff/jotmd/internal/config"
 )
+
+func TestActionPaletteUsesTitledWindowedLayout(t *testing.T) {
+	model := sizedLoadedModel(t)
+	model.width, model.height = 100, 16
+	model = updateModel(t, model, key("P"))
+
+	popup := model.popupContent(model.popupSize())
+	stripped := ansi.Strip(popup)
+	if lipgloss.Width(popup) != 80 || lipgloss.Height(popup) != 12 {
+		t.Fatalf("palette popup = %dx%d, want 80x12", lipgloss.Width(popup), lipgloss.Height(popup))
+	}
+	if !strings.Contains(strings.SplitN(stripped, "\n", 2)[0], "commands (") || !strings.Contains(stripped, "type to filter...") {
+		t.Fatalf("palette lacks title or filter hint:\n%s", stripped)
+	}
+
+	model.theme.Palette.Heading = "#A1B2C3"
+	found := false
+	for _, line := range strings.Split(model.paletteView(40, 8), "\n") {
+		plain := ansi.Strip(line)
+		if strings.HasPrefix(plain, "> ") {
+			found = true
+			keys := strings.Join(model.palette.items[0].binding.Keys, "/")
+			if ansi.StringWidth(line) != 40 || strings.LastIndex(plain, keys) != 26 {
+				t.Fatalf("selected palette row width/key column = %d/%d, want 40/26: %q", ansi.StringWidth(line), strings.LastIndex(plain, keys), plain)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatal("palette has no selected row")
+	}
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(model.theme.Palette.Heading))
+	if view := model.paletteView(78, 10); !strings.Contains(view, keyStyle.Render("c")) {
+		t.Fatalf("palette shortcut does not use heading color: %q", view)
+	}
+}
 
 func TestActionPaletteUsesEffectiveRegistryMetadata(t *testing.T) {
 	model := NewModelWithOptions(testStore(t), config.Defaults(), jotmdTheme(t), config.Keymap{Bindings: []config.Binding{

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -129,11 +130,12 @@ func TestPopupsPaintConfiguredThemeBackground(t *testing.T) {
 	model.theme.Palette.Background = "#282A36"
 	model.openThemePicker()
 	model.help = true
+	background := regexp.MustCompile("\\x1b\\[[0-9;]*48;2;40;42;54(?:;[0-9;]*)?m")
 	for name, view := range map[string]string{
 		"picker": model.themePickerPopup(40, 8),
 		"popup":  model.popupContent(40, 8),
 	} {
-		if !strings.Contains(view, "\x1b[48;2;40;42;54m") {
+		if !background.MatchString(view) {
 			t.Errorf("%s does not paint configured background: %q", name, view)
 		}
 		if !strings.Contains(strings.SplitN(view, "\n", 2)[0], "48;2;40;42;54") {
@@ -154,15 +156,17 @@ func TestPickerUsesBottomPopupInsteadOfCenteredPopup(t *testing.T) {
 	}
 }
 
-func TestHelpIsLargerGroupedAndUsesDistinctHintColors(t *testing.T) {
+func TestHelpUsesTitledWindowedGroupedLayout(t *testing.T) {
 	model := testModel(t)
 	model.width, model.height = 120, 30
 	model.help = true
 	width, height := model.popupSize()
-	model.help = false
-	defaultWidth, defaultHeight := model.popupSize()
-	if width <= defaultWidth || height <= defaultHeight {
-		t.Fatalf("help popup = %dx%d, default = %dx%d; want larger help", width, height, defaultWidth, defaultHeight)
+	popup := model.popupContent(width, height)
+	if lipgloss.Width(popup) != 98 || lipgloss.Height(popup) != 26 {
+		t.Fatalf("help popup = %dx%d, want 98x26", lipgloss.Width(popup), lipgloss.Height(popup))
+	}
+	if first := strings.SplitN(ansi.Strip(popup), "\n", 2)[0]; !strings.Contains(first, "help") {
+		t.Fatalf("help border lacks title: %q", first)
 	}
 
 	help := model.helpView(width, height)
@@ -172,13 +176,13 @@ func TestHelpIsLargerGroupedAndUsesDistinctHintColors(t *testing.T) {
 			t.Errorf("help lacks %q group:\n%s", group, stripped)
 		}
 	}
-	key := lipgloss.NewStyle().Foreground(lipgloss.Color(model.theme.Palette.Accent)).Render("k/up       ")
+	key := lipgloss.NewStyle().Foreground(lipgloss.Color(model.theme.Palette.Heading)).Render("k/up       ")
 	label := lipgloss.NewStyle().Foreground(lipgloss.Color(model.theme.Palette.Foreground)).Render("up")
 	if !strings.Contains(help, key) || !strings.Contains(help, label) {
 		t.Fatalf("help does not style key and label separately:\n%q", help)
 	}
-	if strings.Contains(stripped, "Help") || strings.Contains(stripped, "esc close") {
-		t.Fatalf("help retains redundant title/footer:\n%s", stripped)
+	if !strings.Contains(stripped, "esc close") {
+		t.Fatalf("help lacks close hint:\n%s", stripped)
 	}
 	lines := strings.Split(stripped, "\n")
 	positions := map[string]int{}
@@ -228,6 +232,9 @@ func TestHelpFitsAllBindingsAtTwentyFourRowsAndCloseRemainsConfigurable(t *testi
 	model.width, model.height, model.help = 120, 26, true
 	width, height := model.popupSize()
 	help := ansi.Strip(model.helpView(width, height))
+	if !strings.Contains(help, "x close") || strings.Contains(help, "esc close") {
+		t.Fatalf("help footer does not use configured close key:\n%s", help)
+	}
 	for _, binding := range model.bindings {
 		if len(binding.Keys) == 0 || (!hasContext(binding.Contexts, ContextTree) && !hasContext(binding.Contexts, ContextPreview)) {
 			continue
@@ -246,7 +253,7 @@ func TestHelpFitsAllBindingsAtTwentyFourRowsAndCloseRemainsConfigurable(t *testi
 	}
 }
 
-func TestHelpScrollsAtShortTerminalWithoutExtraChrome(t *testing.T) {
+func TestHelpScrollsAtShortTerminalWithCompactFooter(t *testing.T) {
 	model := sizedLoadedModel(t)
 	model.width, model.height = 80, 10
 	model = updateModel(t, model, key("?"))
@@ -258,13 +265,16 @@ func TestHelpScrollsAtShortTerminalWithoutExtraChrome(t *testing.T) {
 		model = updateModel(t, model, key("down"))
 	}
 	last := ansi.Strip(model.helpView(width, height))
-	if !strings.Contains(last, "quit") || strings.Contains(last, "esc close") {
-		t.Fatalf("scrolled help lacks final binding or gained chrome:\n%s", last)
+	if !strings.Contains(last, "quit") || !strings.Contains(last, "esc close") {
+		t.Fatalf("scrolled help lacks final binding or close hint:\n%s", last)
 	}
 }
 
 func TestTemporaryInterfacesOverlayBrowse(t *testing.T) {
 	for _, test := range temporaryInterfaceCases() {
+		if test.name == "commands" {
+			continue
+		}
 		t.Run(test.name, func(t *testing.T) {
 			model := sizedLoadedModel(t)
 			model = updateModel(t, model, key(test.key))
@@ -273,6 +283,22 @@ func TestTemporaryInterfacesOverlayBrowse(t *testing.T) {
 				if !strings.Contains(view, want) {
 					t.Fatalf("temporary view lacks %q:\n%s", want, view)
 				}
+			}
+		})
+	}
+}
+
+func TestWindowedMenusKeepBrowseChrome(t *testing.T) {
+	for _, test := range []struct{ name, key, title, browse string }{
+		{name: "commands", key: "P", title: "commands (", browse: "note.md"},
+		{name: "help", key: "?", title: "help", browse: "╔"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			model := sizedLoadedModel(t)
+			model = updateModel(t, model, key(test.key))
+			view := ansi.Strip(model.View().Content)
+			if !strings.Contains(view, test.title) || !strings.Contains(view, test.browse) {
+				t.Fatalf("windowed menu hid browse chrome:\n%s", view)
 			}
 		})
 	}

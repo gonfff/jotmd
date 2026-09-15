@@ -9,8 +9,17 @@ import (
 
 func (m Model) helpView(width, height int) string {
 	lines := m.helpLines(width)
-	start := min(max(0, m.helpOffset), max(0, len(lines)-height))
-	return popupLines(lines[start:], width, height)
+	contentHeight := max(1, height-1)
+	start := min(max(0, m.helpOffset), max(0, len(lines)-contentHeight))
+	footer := "↑/↓ scroll"
+	for _, binding := range m.bindings {
+		if binding.Action == ActionClose && hasContext(binding.Contexts, ContextHelp) && len(binding.Keys) != 0 {
+			footer += "  " + strings.Join(binding.Keys, "/") + " close"
+			break
+		}
+	}
+	lines = append(paddedLines(lines[start:], width, contentHeight), lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Muted)).Render(footer))
+	return popupLines(lines, width, height)
 }
 
 func (m Model) helpLines(width int) []string {
@@ -32,7 +41,7 @@ func (m Model) helpLines(width int) []string {
 		}
 	}
 
-	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Accent))
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Heading))
 	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Palette.Foreground))
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(m.theme.Palette.Muted))
 	columnWidth := max(1, (width-2)/2)
@@ -75,6 +84,6 @@ func (m Model) helpLines(width int) []string {
 
 func (m Model) scrollHelp(delta int) Model {
 	width, height := m.popupSize()
-	m.helpOffset = min(max(0, len(m.helpLines(width))-height), max(0, m.helpOffset+delta))
+	m.helpOffset = min(max(0, len(m.helpLines(width))-max(1, height-1)), max(0, m.helpOffset+delta))
 	return m
 }
