@@ -31,8 +31,6 @@ archives:
     files:
       - README.md
       - LICENSE
-      - src: themes/REVDIFF-LICENSE
-        dst: REVDIFF-LICENSE
 
 checksum:
   name_template: checksums.txt
