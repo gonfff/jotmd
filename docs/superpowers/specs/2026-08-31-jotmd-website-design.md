@@ -1,9 +1,13 @@
 # JotMD website design
 
+**Status:** implemented on 2026-08-31. This document reflects the final shipped
+structure; the original implementation details remain in the companion plan as
+historical context.
+
 ## Goal
 
 Create an English product website for JotMD that can be published from the
-repository's `docs/` directory with GitHub Pages. The site must make two ideas
+repository's `site/` directory with GitHub Pages. The site must make two ideas
 clear immediately:
 
 1. JotMD is a keyboard-first Markdown TUI for the terminal.
@@ -23,19 +27,18 @@ OpenCode who want durable project memory without a proprietary data store.
 
 The site is dependency-free static HTML, CSS, and minimal JavaScript:
 
-- `docs/index.html` — product landing page;
-- `docs/docs.html` — detailed documentation;
-- `docs/styles.css` — shared responsive visual system;
-- `docs/site.js` — copy-to-clipboard enhancement for command blocks;
-- `docs/robots.txt` — crawler policy and sitemap pointer;
-- `docs/sitemap.xml` — absolute public URLs for the landing page and docs;
-- `docs/llms.txt` — concise Markdown index for agents and language models;
-- `docs/llms-full.txt` — self-contained Markdown product and usage reference;
-- `docs/.nojekyll` — serve static assets without Jekyll processing.
+- `site/index.html` — product landing page;
+- `site/docs.html` — detailed documentation;
+- `site/styles.css` — shared responsive visual system;
+- `site/site.js` — navigation, slideshow, and copy-to-clipboard enhancement;
+- `site/assets/` — favicon and product screenshots;
+- `site/robots.txt` — crawler policy and sitemap pointer;
+- `site/sitemap.xml` — absolute public URLs for the landing page and docs;
+- `site/llms.txt` — self-contained Markdown product and usage reference.
 
-GitHub Pages will publish the `docs/` directory from the default branch. All
+The Pages workflow publishes `site/` from the default branch. All
 internal links and asset paths must be relative so the site works below a
-repository subpath such as `/jot/` and under a local HTTP server.
+repository subpath such as `/jotmd/` and under a local HTTP server.
 
 No package manager, framework, generated build output, external font, analytics,
 or new dependency is required.
@@ -48,11 +51,11 @@ JotMD identity rather than a copy of another product site.
 - Near-black background and terminal-like surfaces.
 - Large, condensed-feeling system sans-serif headlines paired with system
   monospace for navigation, commands, labels, and key bindings.
-- Existing mint (`#99d58f`) and coral (`#ef8d8a`) accents.
+- JotMD theme green (`#77ad91`) and gold (`#e1b866`) accents.
 - Hard borders and offset shadows instead of soft cards and generic gradients.
 - Asymmetric layouts and oversized type provide the playful poster quality.
-- The existing `docs/images/jotmd.png` screenshot is the main product proof and
-  participates in the composition instead of sitting in a generic device card.
+- Screenshots in `site/assets/` show browsing, search, TOC, commands, and Help
+  across distinct themes.
 - Motion is limited to small entrance or hover transitions and disabled through
   `prefers-reduced-motion`.
 
@@ -62,15 +65,9 @@ palette, typography, geometry, copy, and content hierarchy.
 
 ## Shared navigation
 
-Both pages share a compact header with:
-
-- the `jotmd_` text mark linked to the landing page;
-- `Features` and `Agent memory` anchors on the landing page;
-- `Docs` linked to `docs.html`;
-- `GitHub` linked to the repository.
-
-On small screens the links wrap or reduce to the essential `Docs` and `GitHub`
-links without requiring a JavaScript menu.
+Both pages use the same vault-map navigation. Home/Docs and GitHub links sit at
+the top, while the section map remains sticky as the workspace scrolls. On
+small screens the layout collapses without requiring a JavaScript menu.
 
 ## Landing page
 

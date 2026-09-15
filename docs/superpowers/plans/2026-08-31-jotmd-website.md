@@ -1,10 +1,31 @@
 # JotMD Website Implementation Plan
 
+**Status:** completed on 2026-08-31 in `d560410`.
+
+## Final implementation
+
+- GitHub Pages publishes the dependency-free static site from `site/` through
+  `.github/workflows/pages.yml`.
+- `site/index.html` and `site/docs.html` share the vault-map layout and use
+  `site/styles.css` plus progressive enhancement from `site/site.js`.
+- Product screenshots and the favicon live in `site/assets/`.
+- `site/llms.txt` contains the complete LLM-facing documentation;
+  `llms-full.txt` was deliberately removed as redundant.
+- `internal/sitecheck/site_test.go` validates pages, assets, local links,
+  anchors, sitemap, robots, and LLM discovery. `site/site.test.cjs` covers the
+  scroll-aware vault navigation.
+- The final palette uses JotMD green `#77ad91` and gold `#e1b866`.
+
+The unchecked steps below preserve the original execution history. Do not run
+them as outstanding work: paths and several decisions changed during visual
+iteration. The final implementation above and the current code are
+authoritative.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Publish a distinctive English landing page and detailed documentation page for the JotMD terminal TUI from the repository's `docs/` directory.
+**Goal:** Publish a distinctive English landing page and detailed documentation page for the JotMD terminal TUI.
 
-**Architecture:** Use hand-written static HTML, one shared CSS file, and one progressively enhanced JavaScript file. GitHub Pages serves `docs/` directly; relative URLs keep the site valid beneath the repository path and under a local HTTP server. One Go integration test serves the real `docs/` tree and verifies pages, local assets, and anchors without adding dependencies.
+**Architecture:** Use hand-written static HTML, shared CSS, and progressively enhanced JavaScript. GitHub Pages serves `site/`; relative URLs keep the site valid beneath the repository path and under a local HTTP server. Go integration tests serve the real `site/` tree and verify pages, local assets, and anchors without adding dependencies.
 
 **Tech Stack:** HTML5, CSS, browser JavaScript, Go standard-library integration test, GitHub Pages
 
@@ -13,12 +34,12 @@
 ## Global Constraints
 
 - Keep the site dependency-free: no package manager, framework, generated build output, external font, analytics, or new dependency.
-- Publish from `docs/`; all internal URLs and asset paths must be relative and work below `/jot/`.
+- Publish from `site/`; all internal URLs and asset paths must be relative and work below `/jotmd/`.
 - Present JotMD first as a keyboard-first Markdown TUI for the terminal.
 - Present `jot-memory` as an optional secondary feature for Codex, Claude Code, and OpenCode.
 - Use `README.md`, `docs/jot-memory.md`, runtime help, configuration templates, and keymap definitions as the source of truth; do not invent commands.
-- Reuse `docs/images/jotmd.png`; do not modify the user's existing README, documentation, or untracked logo concepts.
-- Preserve the approved terminal-first visual direction: near-black surfaces, large poster-like system typography, system monospace, mint `#99d58f`, coral `#ef8d8a`, hard borders, and offset shadows.
+- Keep screenshots and the favicon in `site/assets/`.
+- Preserve the approved terminal-first visual direction: near-black surfaces, system monospace, JotMD green `#77ad91`, gold `#e1b866`, and restrained borders.
 - Keep the pages useful without JavaScript and honor `prefers-reduced-motion`.
 
 ---
